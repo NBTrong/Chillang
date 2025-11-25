@@ -117,8 +117,3 @@ Bạn có thể chuyển tiếp toàn bộ nội dung dưới đây cho đội n
 1.  **Dark Mode:** Thiết kế mặc định hoặc ưu tiên Dark Mode (nền tối, chữ trắng) để làm nổi bật Video và tạo cảm giác "Cinematic".
 2.  **Typography:** Font Sans-serif hiện đại, sạch sẽ (Inter, Roboto, SF Pro). Size chữ đọc phải đủ lớn.
 3.  **Chat Metaphor:** Các hiệu ứng chuyển cảnh, loading nên mượt mà giống như đang chat với AI.
-4.  **Color Palette (Gợi ý):**
-    * *Background:* Black / Dark Grey (#121212).
-    * *Sidebar:* Darker Grey (#000000 hoặc #1E1E1E).
-    * *Primary Color:* Electric Blue hoặc Purple (tạo cảm giác AI/Tech).
-    * *Accent:* Neon Green (cho các kết quả đúng/hoàn thành).
