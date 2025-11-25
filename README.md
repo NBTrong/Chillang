@@ -61,8 +61,8 @@ A comprehensive language learning application that uses YouTube videos as learni
 ### Phase 1: Project Setup & Infrastructure
 
 #### 1.1 Supabase Setup
-- [ ] Create Supabase project
-- [ ] Set up database schema:
+- [x] Scaffold Supabase project configuration (`src/services/supabase`)
+- [x] Provide database schema blueprint (`supabase/schema.sql`):
   - `users` (extends Supabase auth.users)
   - `videos` (store YouTube video metadata)
   - `scripts` (store video transcripts with timestamps)
@@ -71,16 +71,18 @@ A comprehensive language learning application that uses YouTube videos as learni
   - `flashcards` (flashcard deck items)
   - `dictation_sessions` (track dictation practice)
   - `learning_progress` (track user progress)
-- [ ] Set up Row Level Security (RLS) policies
-- [ ] Configure Storage buckets for user uploads (if needed)
+- [x] Enable Row Level Security (RLS) with placeholder user-scoped policies
+- [ ] Configure Storage buckets for user uploads (pending until needed)
+
+> Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your `.env.local` before running the Supabase client locally.
 
 #### 1.2 Frontend Dependencies
-- [ ] Install Supabase client: `@supabase/supabase-js`
-- [ ] Install YouTube player: `react-youtube` or `@mui/icons-material` for icons
-- [ ] Install i18n library: `react-i18next` or `i18next`
-- [ ] Install audio/video utilities: `wavesurfer.js` (optional, for audio visualization)
-- [ ] Install router: `react-router-dom`
-- [ ] Install form handling: `react-hook-form` (optional)
+- [x] Install Supabase client: `@supabase/supabase-js`
+- [x] Install YouTube player: `react-youtube` and icon support via `@mui/icons-material`
+- [x] Install i18n library: `react-i18next` + `i18next`
+- [x] Install audio/video utilities: `wavesurfer.js` (ready for future phases)
+- [x] Install router: `react-router-dom`
+- [x] Install form handling: `react-hook-form`
 
 #### 1.3 Project Structure
 ```
@@ -118,6 +120,7 @@ src/
 │   └── i18n.ts
 └── App.tsx
 ```
+- [x] Created the directory structure above with placeholder components, hooks, and service layers wired into the router-driven UI scaffold.
 
 ### Phase 2: YouTube Video Integration
 
