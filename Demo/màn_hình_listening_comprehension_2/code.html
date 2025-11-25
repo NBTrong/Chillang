@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Language Learner - Listening Comprehension</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#007AFF", // Using a vibrant blue for primary actions as per context (Electric Blue)
+            'primary-dark': '#005AC1',
+            "background-light": "#f7f7f7",
+            "background-dark": "#191919",
+            "text-light": "#e0e0e0",
+            "text-dark-secondary": "#8e8e93",
+            "border-dark": "#333333",
+            "option-hover": "#2a2a2a",
+          },
+          fontFamily: {
+            display: "Inter"
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            lg: "1rem",
+            xl: "1.5rem",
+            full: "9999px"
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }input[type="radio"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border-radius: 50%;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid theme('colors.text-dark-secondary');transition: all 0.2s ease-in-out;
+      outline: none;
+      flex-shrink: 0;position: relative;
+    }
+    input[type="radio"]:checked {
+      border-color: theme('colors.primary');background-color: theme('colors.primary');
+    }input[type="radio"]:checked::before {
+      content: '';
+      display: block;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: theme('colors.background-dark');border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: background-color 0.2s ease-in-out;
+    }input[type="radio"]:focus {
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.5);}
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-white/10 px-6 sm:px-10 py-3">
+<div class="flex items-center gap-4 text-white">
+<div class="size-6 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">AI Language Learner</h2>
+</div>
+<div class="hidden md:flex flex-1 justify-end items-center gap-8">
+<div class="flex items-center gap-9">
+<a class="text-slate-300 hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Dashboard</a>
+<a class="text-white text-sm font-medium leading-normal" href="#">Browse Videos</a>
+<a class="text-slate-300 hover:text-white text-sm font-medium leading-normal transition-colors" href="#">My Progress</a>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-primary-dark text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors">
+<span class="truncate">Upgrade</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDh226a6J8hmg_EUW0SWnZDABBeKYEfRzkqVM4Um_2oExUS06Ou0p9HdR0rEwdojnju9YjRfkrnXZgCkITd_y7vx2SerBKyvKf-q1K37aCMh2Psnn0SsOOZpZpcieJSxLQVuz3bgZJUAos4EbuRRUhnqCGdkUAhSxXWLiolwuo-xLla78X7C07_L863Qvsq9E2BnnBSi_4SNI7kIJJY9bT1mePHh8xDKSqAuXKPik9FpjUwjRJ08ZeT3n0ZrP_E75Yr7pG4UzuZuKs");'></div>
+</div>
+<button class="md:hidden text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<main class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="flex flex-wrap gap-2 mb-6">
+<a class="text-[#90adcb] hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Home</a>
+<span class="text-[#90adcb] text-sm font-medium leading-normal">/</span>
+<a class="text-[#90adcb] hover:text-white text-sm font-medium leading-normal transition-colors" href="#">Intermediate English</a>
+<span class="text-[#90adcb] text-sm font-medium leading-normal">/</span>
+<span class="text-white text-sm font-medium leading-normal">Listening Comprehension</span>
+</div>
+<div class="flex flex-wrap justify-between gap-3 mb-8">
+<div class="flex min-w-72 flex-col gap-2">
+<p class="text-white text-4xl font-black leading-tight tracking-[-0.033em]">Tech Talk: The Future of AI</p>
+<p class="text-[#90adcb] text-base font-normal leading-normal">Watch the video and answer the questions below to test your listening skills.</p>
+</div>
+</div>
+<div class="mb-10">
+<div class="relative flex items-center justify-center bg-black bg-cover bg-center aspect-video rounded-xl overflow-hidden shadow-2xl" data-alt="A futuristic image representing AI technology" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPxiE-tdWZ9MQkIRkVcm_i2M-_bCr4sGyb4CiwS8lHj0q53e7QaW4c8bgNCuU0zNtV2n6qdgCyg805GGK1ylUn9tn-R9v1gFukAzBy-jNVJsiNzaJ46GVmIvJlSCMq-UdUm2ukOuHK2lU7ygUMBG5MyhB3BnMM2TjFroGbEAmSn-xIiELBr2Z7xhTVPu2RaHtGAKunqZpNV7MdMYAFkII2tetzF7K4AO1OcEMBOqfoltFb_7kpFR2rQPE6YI3ykGF48V9eMWVRdXQ");'>
+<button class="flex shrink-0 items-center justify-center rounded-full size-20 bg-black/50 text-white hover:bg-black/70 transition-colors backdrop-blur-sm">
+<span class="material-symbols-outlined text-5xl">play_arrow</span>
+</button>
+<div class="absolute inset-x-0 bottom-0 px-6 py-3 bg-gradient-to-t from-black/60 to-transparent">
+<div class="flex h-5 items-center justify-center gap-2 group">
+<div class="h-1.5 w-[30%] rounded-full bg-white"></div>
+<div class="relative"><div class="absolute -left-2.5 -top-2.5 size-5 rounded-full bg-white shadow-md ring-2 ring-black/20 group-hover:scale-110 transition-transform"></div></div>
+<div class="h-1.5 w-[70%] rounded-full bg-white/30"></div>
+</div>
+<div class="flex items-center justify-between mt-1">
+<p class="text-white text-xs font-medium leading-normal tracking-[0.015em]">0:37</p>
+<div class="flex items-center gap-4 text-white">
+<button><span class="material-symbols-outlined text-xl">volume_up</span></button>
+<button><span class="material-symbols-outlined text-xl">closed_caption_off</span></button>
+<button><span class="material-symbols-outlined text-xl">settings</span></button>
+<button><span class="material-symbols-outlined text-xl">fullscreen</span></button>
+</div>
+<p class="text-white text-xs font-medium leading-normal tracking-[0.015em]">2:23</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-10">
+<div class="flex items-center justify-between border-b border-border-dark pb-3">
+<h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Comprehension Check</h2>
+<button class="flex items-center gap-1 text-sm text-text-dark-secondary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-base">refresh</span>
+              Regenerate
+            </button>
+</div>
+<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-6">
+<div class="flex items-start justify-between gap-4">
+<p class="text-xl font-semibold text-white">1. What is the main topic discussed in the first minute of the video?</p>
+<button class="flex items-center gap-1 text-sm text-yellow-400 hover:text-yellow-300 transition-colors shrink-0">
+<span class="material-symbols-outlined text-base">lightbulb</span> Hint
+              </button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question1" type="radio"/>
+<span class="text-text-light text-base leading-snug">The history of computer programming.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question1" type="radio"/>
+<span class="text-text-light text-base leading-snug">Recent advancements in neural networks.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question1" type="radio"/>
+<span class="text-text-light text-base leading-snug">The ethical implications of AI.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question1" type="radio"/>
+<span class="text-text-light text-base leading-snug">Quantum computing breakthroughs.</span>
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-6">
+<div class="flex items-start justify-between gap-4">
+<p class="text-xl font-semibold text-white">2. According to the speaker, what is a primary challenge for AI development?</p>
+<button class="flex items-center gap-1 text-sm text-yellow-400 hover:text-yellow-300 transition-colors shrink-0">
+<span class="material-symbols-outlined text-base">lightbulb</span> Hint
+                </button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question2" type="radio"/>
+<span class="text-text-light text-base leading-snug">Lack of processing power.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question2" type="radio"/>
+<span class="text-text-light text-base leading-snug">High cost of research.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question2" type="radio"/>
+<span class="text-text-light text-base leading-snug">Acquiring large, unbiased datasets.</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-option-hover cursor-pointer transition-colors border border-transparent has-[:checked]:border-primary has-[:checked]:bg-primary/[0.1]">
+<input class="" name="question2" type="radio"/>
+<span class="text-text-light text-base leading-snug">Public skepticism and fear.</span>
+</label>
+</div>
+</div>
+</div>
+<div class="flex justify-end pt-4">
+<button class="w-full sm:w-auto flex items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-8 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary-dark transition-colors shadow-[0_4px_14px_0_rgb(0,118,255,39%)] hover:shadow-[0_6px_20px_0_rgb(0,118,255,23%)]">
+              Submit Answers
+            </button>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>
