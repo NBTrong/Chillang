@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+# Tube Study Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Tailwind UI for the Tube Study learning flows (Home, Video Dashboard, Reading, Listening, Dictation).
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd frontend
+npm install
+cp env.example .env.local   # add Supabase keys next
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Key | Description |
+| --- | --- |
+| `VITE_SUPABASE_URL` | `https://prxsyvwhysitbpdfbigh.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Public anon key from Supabase dashboard |
+| `SUPABASE_SERVICE_ROLE_KEY` | Only used for server-side scripts / Edge Functions |
+| `SUPABASE_DB_PASSWORD` | Required if you push migrations via CLI |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Never expose the service-role key to browser clients.
+
+## Supabase integration
+
+- `src/lib/supabaseClient.ts` instantiates `@supabase/supabase-js` with the env vars above.
+- `src/services/supabaseApi.ts` wraps common PostgREST calls (videos, study sessions, quizzes, dictation, vocabulary, flashcards).
+- Schema + policies live in `../supabase/schema.sql`. Run it in the Supabase SQL editor or via `supabase db push` to provision the managed backend.
+
+## Recommended next steps
+
+1. Add auth (email magic link or OAuth) so `auth.uid()` is available for RLS policies.
+2. Wire UI screens to the functions exported from `src/services/supabaseApi.ts`.
+3. Implement an Edge Function that:
+   - Accepts a YouTube URL
+   - Generates transcripts/quizzes/vocabulary
+   - Inserts rows into the Supabase tables defined in `supabase/schema.sql`.
+4. Use PostgREST filters to hydrate the sidebar recents list from `recent_study_sessions`.

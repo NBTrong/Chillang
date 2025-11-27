@@ -74,14 +74,14 @@ const ListeningScreen = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col text-white">
+    <div className="flex flex-1 flex-col text-text-primary">
       <div className="flex flex-1 flex-col overflow-auto">
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center gap-2 text-sm text-[#9aa0b5]">
+        <div className="mb-6 flex items-center gap-2 typo-body-sm text-text-secondary">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="transition hover:text-white"
+            className="transition hover:text-text-primary"
           >
             Home
           </button>
@@ -89,18 +89,18 @@ const ListeningScreen = () => {
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="transition hover:text-white"
+            className="transition hover:text-text-primary"
           >
             Intermediate English
           </button>
           <span>/</span>
-          <span className="text-white">Listening Comprehension</span>
+          <span className="text-text-primary">Listening Comprehension</span>
         </div>
 
         {/* Title and Instruction */}
         <div className="mb-6">
-          <h2 className="mb-2 text-3xl font-bold text-white">Tech Talk: The Future of AI</h2>
-          <p className="text-base text-[#9aa0b5]">
+          <h2 className="mb-2 typo-title text-text-primary">Tech Talk: The Future of AI</h2>
+          <p className="typo-body text-text-secondary">
             Watch the video and answer the questions below to test your listening skills.
           </p>
         </div>
@@ -108,7 +108,7 @@ const ListeningScreen = () => {
         {/* Video and Transcript Section */}
         <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_400px]">
           {/* Video Player */}
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-[#0a0d15] border border-[#1a1f33]">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border-primary bg-bg-secondary">
             {/* Background pattern */}
             <div
               className="absolute inset-0 opacity-30"
@@ -120,8 +120,8 @@ const ListeningScreen = () => {
             {/* AI Logo with glow effect */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
-                <div className="absolute inset-0 rounded-lg bg-[#3140ff] opacity-20 blur-2xl" />
-                <div className="relative flex h-32 w-32 items-center justify-center rounded-lg bg-gradient-to-br from-[#1a1f33] to-[#0f1219] border border-[#3140ff]/30 text-4xl font-bold text-white shadow-[0_0_30px_rgba(49,64,255,0.5)]">
+                <div className="absolute inset-0 rounded-lg bg-accent-primary opacity-20 blur-2xl" />
+                <div className="relative flex h-32 w-32 items-center justify-center rounded-lg border border-accent-primary/30 bg-gradient-to-br from-bg-tertiary to-bg-secondary text-4xl font-bold text-text-primary shadow-[0_0_30px_rgba(49,64,255,0.5)]">
                   AI
                 </div>
               </div>
@@ -129,36 +129,36 @@ const ListeningScreen = () => {
             
             {/* Play button overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <button className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl text-[#05060a] shadow-lg hover:bg-white/95 transition">
+              <button className="flex h-16 w-16 items-center justify-center rounded-full bg-text-inverse text-2xl text-bg-primary shadow-lg transition hover:bg-text-inverse/95">
                 ▶
               </button>
             </div>
             
             {/* Video Controls */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-              <div className="mb-2 flex items-center justify-between text-xs text-white">
+              <div className="mb-2 flex items-center justify-between text-xs text-text-inverse">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(totalDuration)}</span>
               </div>
-              <div className="mb-3 h-1.5 w-full rounded-full bg-white/20">
+              <div className="mb-3 h-1.5 w-full rounded-full bg-text-inverse/20">
                 <div 
-                  className="h-full rounded-full bg-white transition-all"
+                  className="h-full rounded-full bg-text-inverse transition-all"
                   style={{ width: `${(currentTime / totalDuration) * 100}%` }}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <button className="flex h-9 w-9 items-center justify-center text-white hover:bg-white/10 rounded transition">
+                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
                     🔊
                   </button>
-                  <button className="flex h-9 w-9 items-center justify-center text-white hover:bg-white/10 rounded transition text-xs font-medium">
+                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse text-xs font-medium transition hover:bg-text-inverse/10">
                     CC
                   </button>
-                  <button className="flex h-9 w-9 items-center justify-center text-white hover:bg-white/10 rounded transition">
+                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
                     ⚙️
                   </button>
                 </div>
-                <button className="flex h-9 w-9 items-center justify-center text-white hover:bg-white/10 rounded transition">
+                <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
                   ⛶
                 </button>
               </div>
@@ -167,30 +167,30 @@ const ListeningScreen = () => {
 
           {/* Transcript Panel */}
           {showTranscript && (
-            <div className="rounded-2xl border border-[#1a1f33] bg-[#0a0d15] p-4">
+            <div className="rounded-2xl border border-border-primary bg-bg-secondary p-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white">Transcript</h3>
-                  <label className="flex items-center gap-2 text-xs text-[#9aa0b5]">
+                  <h3 className="typo-subtitle text-text-primary">Transcript</h3>
+                  <label className="flex items-center gap-2 typo-body-sm text-text-secondary">
                     <input
                       type="checkbox"
                       checked={autoScroll}
                       onChange={(e) => setAutoScroll(e.target.checked)}
-                      className="h-4 w-4 rounded border-[#1a1f33] bg-[#0a0d15] text-[#3140ff]"
+                      className="h-4 w-4 rounded border-border-primary bg-bg-secondary text-accent-primary"
                     />
                     Auto-scroll
                   </label>
                 </div>
-                <div className="max-h-[500px] space-y-2 overflow-y-auto text-sm">
+                <div className="max-h-[500px] space-y-2 overflow-y-auto typo-body-sm">
                   {transcriptEntries.map((entry, index) => (
                     <div
                       key={index}
                       className={`rounded-lg p-3 transition ${
                         entry.highlighted
-                          ? 'bg-[#3140ff]/20 text-[#8fb6ff] border border-[#3140ff]/30'
-                          : 'bg-[#0f1219] text-[#9aa0b5]'
+                          ? 'border border-accent-primary/30 bg-accent-primary/10 text-accent-primary'
+                          : 'bg-bg-tertiary text-text-secondary'
                       }`}
                     >
-                      <span className="text-xs text-[#7f859c]">[{entry.timestamp}]</span>{' '}
+                      <span className="typo-caption text-text-tertiary">[{entry.timestamp}]</span>{' '}
                       <span className={entry.highlighted ? 'font-medium' : ''}>{entry.text}</span>
                     </div>
                   ))}
@@ -201,19 +201,19 @@ const ListeningScreen = () => {
 
         {/* Results Section */}
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex items-center gap-4 rounded-xl border border-[#1a1f33] bg-[#0a0d15] px-6 py-3">
-            <p className="text-xs uppercase tracking-wider text-[#9aa0b5]">Result</p>
-            <p className="text-xl font-bold text-[#4ade80] leading-none">{score}/{totalQuestions}</p>
+          <div className="flex items-center gap-4 rounded-xl border border-border-primary bg-bg-secondary px-6 py-3">
+            <p className="typo-caption text-text-tertiary">Result</p>
+            <p className="typo-title leading-none text-success">{score}/{totalQuestions}</p>
           </div>
           <button
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="rounded-xl border border-[#1a1f33] bg-[#0a0d15] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0f1219]"
+          className="rounded-xl border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary hover:bg-interactive-hover"
           >
             Try Again
           </button>
           <button
             onClick={() => setShowTranscript(!showTranscript)}
-            className="rounded-xl border border-[#1a1f33] bg-[#0a0d15] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0f1219]"
+          className="rounded-xl border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary hover:bg-interactive-hover"
           >
             {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
           </button>
@@ -226,50 +226,50 @@ const ListeningScreen = () => {
               const isIncorrect = q.userAnswer !== undefined && q.userAnswer !== q.correctAnswer
 
               return (
-                <div key={q.id} className="rounded-2xl border border-[#1a1f33] bg-[#0a0d15] p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-white">{q.question}</h3>
+                <div key={q.id} className="rounded-2xl border border-border-primary bg-bg-secondary p-6">
+                  <h3 className="mb-4 typo-subtitle font-semibold text-text-primary">{q.question}</h3>
                   <div className="space-y-3">
                     {q.options.map((option, index) => {
                       const isSelected = q.userAnswer === index
                       const isCorrectOption = index === q.correctAnswer
-                      let optionStyle = 'border-[#1a1f33] bg-[#0f1219] text-[#9aa0b5]'
+                      let optionStyle = 'border-border-primary bg-bg-tertiary text-text-secondary'
 
                       if (isSelected && isCorrect) {
-                        optionStyle = 'border-[#4ade80] bg-[#17221b] text-[#4ade80]'
+                        optionStyle = 'border-success bg-success/10 text-success'
                       } else if (isSelected && isIncorrect) {
-                        optionStyle = 'border-[#ef4444] bg-[#1f1717] text-[#ef4444]'
+                        optionStyle = 'border-error bg-error/10 text-error'
                       } else if (isCorrectOption && isIncorrect) {
-                        optionStyle = 'border-[#4ade80]/50 bg-[#17221b]/50 text-[#4ade80]'
+                        optionStyle = 'border-success/50 bg-success/5 text-success'
                       }
 
                       return (
                         <label
                           key={index}
                           className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${optionStyle} ${
-                            !isSelected && !isCorrectOption ? 'hover:border-[#2a2f42] hover:bg-[#0f1219]' : ''
+                            !isSelected && !isCorrectOption ? 'hover:bg-interactive-hover' : ''
                           }`}
                         >
                           <div className="mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-current">
                             {isSelected && (
-                              <div className={`h-2.5 w-2.5 rounded-full ${
-                                isCorrect ? 'bg-[#4ade80]' : 'bg-[#ef4444]'
-                              }`} />
+                              <div
+                                className={`h-2.5 w-2.5 rounded-full ${
+                                  isCorrect ? 'bg-success' : 'bg-error'
+                                }`}
+                              />
                             )}
                           </div>
-                          <span className="flex-1">{option}</span>
+                          <span className="flex-1 typo-body-sm">{option}</span>
                         </label>
                       )
                     })}
                   </div>
                   {(isCorrect || isIncorrect) && (
                     <div
-                      className={`mt-4 rounded-xl p-4 ${
-                        isCorrect
-                          ? 'bg-[#17221b]/50 border border-[#4ade80]/30 text-[#4ade80]'
-                          : 'bg-[#1f1717]/50 border border-[#ef4444]/30 text-[#ef4444]'
+                      className={`mt-4 rounded-xl border p-4 ${
+                        isCorrect ? 'border-success/30 bg-success/5 text-success' : 'border-error/30 bg-error/5 text-error'
                       }`}
                     >
-                      <p className="text-sm">
+                      <p className="typo-body-sm">
                         {isCorrect ? '✓ ' : '✗ '}
                         {q.feedback}
                       </p>

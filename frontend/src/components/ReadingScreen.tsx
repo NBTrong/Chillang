@@ -166,35 +166,37 @@ const ReadingScreen = () => {
 
   return (
     <div className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,_1fr)_320px]">
-      <section className="flex flex-col rounded-[32px] border border-[#111425] bg-gradient-to-b from-[#080a13] to-[#05060c] p-6 shadow-[0px_20px_70px_rgba(5,6,12,0.7)] md:p-10">
+      <section className="flex flex-col rounded-[32px] border border-border-primary bg-bg-secondary p-6 shadow-[0px_20px_70px_rgba(5,6,12,0.45)] md:p-10">
         {/* Navigation */}
         <div className="mb-6 flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-[#9aa0b5] transition hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition hover:text-primary"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-xs font-medium text-[#9aa0b5]">BACK TO DASHBOARD</span>
+          <span className="text-xs font-medium text-text-tertiary">BACK TO DASHBOARD</span>
         </div>
 
         {/* Header */}
         <header className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#7f88a9] mb-4">READING MODE</p>
+          <p className="mb-4 typo-caption font-semibold text-text-tertiary">READING MODE</p>
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white md:text-[40px] leading-tight">The Future of Personalized Learning</h1>
-              <p className="mt-3 max-w-2xl text-sm text-[#a2a9c7]">
+              <h1 className="typo-title text-text-primary">The Future of Personalized Learning</h1>
+              <p className="mt-3 max-w-2xl typo-body text-text-secondary">
                 Focused reading workspace with AI-powered lookups, audio snippets, and bilingual controls.
               </p>
             </div>
             <button
               type="button"
               className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition whitespace-nowrap ${
-                showSummary ? 'bg-white text-[#05060a]' : 'border border-white/30 text-white hover:border-white/70'
+                showSummary
+                  ? 'bg-text-inverse text-bg-primary'
+                  : 'border border-border-primary text-text-primary hover:bg-interactive-hover'
               }`}
               onClick={() => setShowSummary((prev) => !prev)}
             >
@@ -207,14 +209,16 @@ const ReadingScreen = () => {
         {/* Metadata and Controls */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="rounded-full bg-[#10142a] px-3 py-1.5 text-xs font-semibold text-[#8fb6ff]">Difficulty · B1</span>
-            <span className="text-sm text-[#7f88a9]">742 words · 6m 40s</span>
+            <span className="rounded-full bg-bg-tertiary px-3 py-1.5 typo-body-sm font-semibold text-accent-primary">Difficulty · B1</span>
+            <span className="typo-body-sm text-text-secondary">742 words · 6m 40s</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                fontSize === 'md' ? 'border-[#3c6afe] bg-[#3c6afe]/10 text-white' : 'border-white/10 text-[#9aa1bd] hover:border-white/20'
+                fontSize === 'md'
+                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
               }`}
               onClick={() => setFontSize('md')}
             >
@@ -223,7 +227,9 @@ const ReadingScreen = () => {
             <button
               type="button"
               className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                fontSize === 'lg' ? 'border-[#3c6afe] bg-[#3c6afe]/10 text-white' : 'border-white/10 text-[#9aa1bd] hover:border-white/20'
+                fontSize === 'lg'
+                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
               }`}
               onClick={() => setFontSize('lg')}
             >
@@ -232,7 +238,9 @@ const ReadingScreen = () => {
             <button
               type="button"
               className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                showTranslation ? 'border-[#3c6afe] bg-[#3c6afe]/10 text-white' : 'border-white/10 text-[#9aa1bd] hover:border-white/20'
+                showTranslation
+                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
               }`}
               onClick={() => setShowTranslation((prev) => !prev)}
             >
@@ -242,12 +250,12 @@ const ReadingScreen = () => {
         </div>
 
         {showSummary && (
-          <div className="mb-8 rounded-2xl border border-[#161a2a] bg-[#0a0e1d]/80 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7f88a9] mb-4">QUICK DIGEST</p>
-            <ul className="space-y-3 text-sm text-[#c8d0f0]">
+          <div className="mb-8 rounded-2xl border border-border-primary bg-bg-tertiary/80 p-5">
+            <p className="mb-4 typo-caption font-semibold text-text-tertiary">QUICK DIGEST</p>
+            <ul className="space-y-3 typo-body-sm text-text-secondary">
               {summaryHighlights.map((point) => (
                 <li key={point} className="flex items-start gap-3">
-                  <span className="mt-1.5 h-2 w-2 rounded-full bg-[#6f80ff] flex-shrink-0" />
+                  <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary" />
                   <span>{point}</span>
                 </li>
               ))}
@@ -259,8 +267,10 @@ const ReadingScreen = () => {
         <div className="space-y-8">
           {readingSections.map((section) => (
             <div key={section.id} className="space-y-5">
-              <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#5e6584]">
-                <span className="rounded-full border border-[#1c2136] bg-[#0a0e1d] px-3 py-1 text-[10px] font-medium text-white/80">{section.timestamp}</span>
+              <div className="flex items-center gap-3 typo-caption text-text-tertiary">
+                <span className="rounded-full border border-border-primary bg-bg-tertiary px-3 py-1 text-[10px] font-medium text-text-secondary">
+                  {section.timestamp}
+                </span>
                 <span className="font-semibold">{section.label}</span>
               </div>
               <div className="space-y-4">
@@ -279,13 +289,13 @@ const ReadingScreen = () => {
                           handleSentenceSelect(sentence.id)
                         }
                       }}
-                      className={`rounded-2xl border-2 px-6 py-5 transition cursor-pointer ${
-                        isActive 
-                          ? 'border-[#3c6afe] bg-[#0f1530]/50 shadow-[0_0_20px_rgba(60,106,254,0.2)]' 
-                          : 'border-transparent bg-transparent hover:bg-[#0b0f1d]/30'
+                      className={`cursor-pointer rounded-2xl border-2 px-6 py-5 transition ${
+                        isActive
+                          ? 'border-accent-primary bg-accent-primary/5 shadow-[0_0_20px_rgba(60,106,254,0.2)]'
+                          : 'border-transparent bg-transparent hover:bg-interactive-hover'
                       }`}
                     >
-                      <p className={`text-left leading-relaxed text-white ${fontSizeClass}`}>
+                      <p className={`typo-body text-left leading-relaxed text-text-primary ${fontSizeClass}`}>
                         {tokens.map((token, index) => {
                           if (/^\s+$/.test(token)) {
                             return <span key={`${sentence.id}-${index}`}>{token}</span>
@@ -308,7 +318,7 @@ const ReadingScreen = () => {
                               key={`${sentence.id}-${index}`}
                               type="button"
                               className={`relative inline-flex items-center rounded-md px-1.5 py-0.5 text-inherit transition ${
-                                isSelectedWord ? 'bg-[#3c6afe]/30 text-white' : 'hover:bg-[#1b2138]'
+                                isSelectedWord ? 'bg-accent-primary/30 text-text-primary' : 'hover:bg-interactive-hover'
                               }`}
                               onClick={(event) => {
                                 event.stopPropagation()
@@ -321,7 +331,7 @@ const ReadingScreen = () => {
                         })}
                       </p>
                       {showTranslation && (
-                        <p className="mt-3 text-left text-sm text-[#7f88a9]">{sentence.translation}</p>
+                        <p className="mt-3 text-left typo-body-sm text-text-secondary">{sentence.translation}</p>
                       )}
                     </div>
                   )
@@ -332,46 +342,52 @@ const ReadingScreen = () => {
         </div>
 
         {activeSentence && (
-          <div className="mt-8 rounded-3xl border border-[#161a2a] bg-[#060916]/90 p-5 text-sm text-white">
+          <div className="mt-8 rounded-3xl border border-border-primary bg-bg-tertiary/90 p-5 typo-body-sm text-text-primary">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="text-xs uppercase tracking-[0.3em] text-[#7f88a9]">Mini Player</p>
-                <p className="mt-2 text-base text-[#f7f8ff]">{activeSentence.text}</p>
+                <p className="typo-caption text-text-tertiary">Mini Player</p>
+                <p className="mt-2 typo-body text-text-primary">{activeSentence.text}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#21263a] bg-[#0c1224] text-lg hover:bg-[#13182a] transition">⏮</button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#05060a] text-xl hover:bg-white/90 transition">▶</button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#21263a] bg-[#0c1224] text-lg hover:bg-[#13182a] transition">⏭</button>
+                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-secondary text-lg transition hover:bg-interactive-hover">
+                  ⏮
+                </button>
+                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-text-inverse text-bg-primary text-xl transition hover:bg-text-inverse/90">
+                  ▶
+                </button>
+                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-secondary text-lg transition hover:bg-interactive-hover">
+                  ⏭
+                </button>
               </div>
             </div>
-            <div className="mt-4 h-1 w-full rounded-full bg-[#1a2037]">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#3c6afe] to-[#8c6afc]" style={{ width: '62%' }} />
+            <div className="mt-4 h-1 w-full rounded-full bg-border-divider">
+              <div className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-secondary" style={{ width: '62%' }} />
             </div>
           </div>
         )}
       </section>
 
-      <aside className="hidden rounded-[32px] border border-[#111425] bg-[#050711]/90 p-6 text-sm text-white lg:flex lg:flex-col">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#7f88a9]">TIMESTAMPS</p>
+      <aside className="hidden rounded-[32px] border border-border-primary bg-bg-secondary/90 p-6 typo-body-sm text-text-primary lg:flex lg:flex-col">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="typo-caption font-semibold text-text-tertiary">TIMESTAMPS</p>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#7f88a9]">Auto-sync</span>
+            <span className="text-xs text-text-tertiary">Auto-sync</span>
             <button
               type="button"
               onClick={() => setAutoSync(!autoSync)}
               className={`relative h-5 w-9 rounded-full transition-colors ${
-                autoSync ? 'bg-[#3c6afe]' : 'bg-[#1a1f33]'
+                autoSync ? 'bg-accent-primary' : 'bg-border-secondary'
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-text-inverse transition-transform ${
                   autoSync ? 'translate-x-4' : 'translate-x-0'
                 }`}
               />
             </button>
           </div>
         </div>
-        <div className="space-y-3 overflow-y-auto flex-1">
+        <div className="flex-1 space-y-3 overflow-y-auto">
           {timelineMarkers.map((marker) => {
             const isActive = marker.id === activeSectionId
             return (
@@ -379,9 +395,9 @@ const ReadingScreen = () => {
                 key={marker.id}
                 type="button"
                 className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
-                  isActive 
-                    ? 'border-[#3c6afe] bg-[#0f1530]/80' 
-                    : 'border-[#1a1f33] bg-[#070b1b]/80 hover:border-[#2a2f43] hover:bg-[#0a0f1f]'
+                  isActive
+                    ? 'border-accent-primary bg-accent-primary/10'
+                    : 'border-border-primary bg-bg-secondary hover:bg-interactive-hover'
                 }`}
                 onClick={() => {
                   const firstSentence = readingSections.find((section) => section.id === marker.id)?.sentences[0]
@@ -390,21 +406,21 @@ const ReadingScreen = () => {
                   }
                 }}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <svg 
-                      className={`h-4 w-4 ${isActive ? 'text-[#3c6afe]' : 'text-[#5e6584]'}`} 
+                    <svg
+                      className={`h-4 w-4 ${isActive ? 'text-accent-primary' : 'text-text-tertiary'}`}
                       fill="currentColor" 
                       viewBox="0 0 24 24"
                     >
                       <path d="M8 5v14l11-7z"/>
                     </svg>
-                    <span className="text-xs font-medium text-[#9aa1bd]">{marker.time}</span>
+                    <span className="typo-body-sm font-medium text-text-secondary">{marker.time}</span>
                   </div>
-                  {isActive && <span className="h-2 w-2 rounded-full bg-[#33f399]" />}
+                  {isActive && <span className="h-2 w-2 rounded-full bg-success" />}
                 </div>
-                <p className="text-sm font-semibold text-white">{marker.label}</p>
-                <p className="mt-1.5 text-xs text-[#8d94b6] leading-relaxed">{marker.description}</p>
+                <p className="typo-subtitle font-semibold text-text-primary">{marker.label}</p>
+                <p className="mt-1.5 typo-body-sm leading-relaxed text-text-secondary">{marker.description}</p>
               </button>
             )
           })}
@@ -412,35 +428,37 @@ const ReadingScreen = () => {
       </aside>
 
       {selectedEntry && (
-        <div className="fixed bottom-6 left-1/2 z-20 w-[min(480px,90vw)] -translate-x-1/2 rounded-[28px] border border-[#161a2a] bg-[#0a0d1a]/95 p-6 backdrop-blur-xl shadow-[0_30px_120px_rgba(5,6,12,0.95)]">
-          <div className="flex items-start justify-between mb-4">
+        <div className="fixed bottom-6 left-1/2 z-20 w-[min(480px,90vw)] -translate-x-1/2 rounded-[28px] border border-border-primary bg-bg-secondary/95 p-6 backdrop-blur-xl shadow-[0_30px_120px_rgba(5,6,12,0.95)]">
+          <div className="mb-4 flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-2xl font-semibold text-white capitalize">{selectedWord}</h3>
-                <span className="rounded-lg bg-[#0f1430] px-2.5 py-1 text-xs font-medium text-[#8fb6ff] uppercase">{selectedEntry.type}</span>
+              <div className="mb-2 flex items-center gap-3">
+                <h3 className="typo-title capitalize text-text-primary">{selectedWord}</h3>
+                <span className="rounded-lg bg-bg-tertiary px-2.5 py-1 typo-body-sm font-medium uppercase text-accent-primary">
+                  {selectedEntry.type}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-[#7f88a9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
-                <p className="text-sm text-[#9aa1bd]">{selectedEntry.pronunciation}</p>
+                <p className="typo-body-sm text-text-secondary">{selectedEntry.pronunciation}</p>
               </div>
             </div>
-            <button 
-              type="button" 
-              onClick={() => setSelectedWord(null)} 
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-[#7f88a9] hover:bg-white/5 transition"
+            <button
+              type="button"
+              onClick={() => setSelectedWord(null)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-text-tertiary transition hover:bg-interactive-hover"
             >
               ×
             </button>
           </div>
-          <p className="text-sm text-[#d5d9ec] mb-3">{selectedEntry.meaning}</p>
+          <p className="mb-3 typo-body-sm text-text-secondary">{selectedEntry.meaning}</p>
           <div className="mt-4 flex items-center gap-2">
-            <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white/95 px-4 py-3 text-sm font-semibold text-[#05060a] hover:bg-white transition">
+            <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-text-inverse px-4 py-3 text-sm font-semibold text-bg-primary transition hover:bg-text-inverse/90">
               <span>➕</span> 
               <span>Add to Flashcard</span>
             </button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1d2340] bg-[#0b0f1d] text-lg text-white hover:bg-[#0f1424] transition">
+            <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-tertiary text-lg text-text-primary transition hover:bg-interactive-hover">
               🔊
             </button>
           </div>

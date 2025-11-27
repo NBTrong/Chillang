@@ -78,14 +78,14 @@ const DictationScreen = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#04060c] text-white">
+    <div className="flex min-h-screen flex-col bg-bg-primary text-text-primary">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[#1a1f33] bg-[#05060a] px-6 py-4">
-        <h1 className="text-lg font-semibold text-white">Dictation: Lesson 1 - Part 3</h1>
+      <header className="flex items-center justify-between border-b border-border-primary bg-bg-secondary px-6 py-4">
+        <h1 className="typo-title text-text-primary">Dictation: Lesson 1 - Part 3</h1>
         <button
           type="button"
           onClick={handleClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1a1f33] bg-[#0c0f1b] text-xl text-white transition hover:bg-[#131620]"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-xl text-text-primary transition hover:bg-interactive-hover"
           aria-label="Close"
         >
           ×
@@ -96,12 +96,12 @@ const DictationScreen = () => {
         <div className="w-full max-w-3xl space-y-8">
           {/* Progress Section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm text-[#9aa0b5]">
+            <div className="flex items-center justify-between typo-body-sm text-text-secondary">
               <span className="font-medium">Câu {currentQuestion}/{totalQuestions}</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[#1a1f33]">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-bg-tertiary">
               <div
-                className="h-full rounded-full bg-[#4ade80] transition-all duration-300"
+                className="h-full rounded-full bg-success transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -109,16 +109,16 @@ const DictationScreen = () => {
 
           {/* Feedback Section */}
           {showFeedback && feedback && (
-            <div className="space-y-4 rounded-2xl border border-[#1a1f33] bg-[#0a0d15] p-6">
+            <div className="space-y-4 rounded-2xl border border-border-primary bg-bg-secondary p-6">
               <div className="space-y-2">
-                <p className="text-sm text-[#9aa0b5]">Your answer:</p>
-                <p className="text-base text-white">
+                <p className="typo-body-sm text-text-secondary">Your answer:</p>
+                <p className="typo-body text-text-primary">
                   {highlightText(feedback.userAnswer, feedback.incorrectWord, false)}
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm text-[#9aa0b5]">Correct answer:</p>
-                <p className="text-base text-white">
+                <p className="typo-body-sm text-text-secondary">Correct answer:</p>
+                <p className="typo-body text-text-primary">
                   {highlightText(feedback.correctAnswer, feedback.correctWord, true)}
                 </p>
               </div>
@@ -127,12 +127,12 @@ const DictationScreen = () => {
 
           {/* Input Section */}
           <div className="relative">
-            <div className="relative rounded-3xl border border-[#1a1f33] bg-[#0a0d15] p-6">
+            <div className="relative rounded-3xl border border-border-primary bg-bg-secondary p-6">
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Type what you hear..."
-                className="w-full resize-none bg-transparent text-lg text-white placeholder:text-[#5c6277] focus:outline-none"
+                className="w-full resize-none bg-transparent typo-body text-text-primary placeholder:text-text-tertiary focus:outline-none"
                 rows={4}
               />
               
@@ -141,7 +141,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleReplay}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#1a1f33] bg-[#0c0f1b] text-white transition hover:bg-[#131620]"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
                   aria-label="Replay"
                 >
                   <svg
@@ -161,7 +161,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleHint}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#1a1f33] bg-[#0c0f1b] text-white transition hover:bg-[#131620]"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
                   aria-label="Hint"
                 >
                   <svg
@@ -181,7 +181,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#1a1f33] bg-[#0c0f1b] text-white transition hover:bg-[#131620]"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
                   aria-label="Skip"
                 >
                   <svg
@@ -212,7 +212,7 @@ const DictationScreen = () => {
             <button
               type="button"
               onClick={handleCheckAnswer}
-              className="rounded-2xl bg-white/90 px-8 py-3 text-base font-semibold text-[#05060a] shadow-[0_8px_20px_rgba(255,255,255,0.2)] transition hover:bg-white"
+              className="rounded-2xl bg-text-inverse px-8 py-3 text-base font-semibold text-bg-primary shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-text-inverse/90"
             >
               Check Answer
             </button>
