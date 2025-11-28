@@ -69,10 +69,38 @@ Fill in the missing values:
 - `VITE_SUPABASE_ANON_KEY=<anon_public_key_from_dashboard>`
 - `SUPABASE_SERVICE_ROLE_KEY=<service_role_key_from_dashboard>` (only for server-side tooling, *not* for Vite).
 - `SUPABASE_DB_PASSWORD=<database_password_if_running supabase db push>`
+- `RAPIDAPI_KEY=<rapidapi_key_for_youtube_transcriptor>`
+
+> Keep `RAPIDAPI_KEY` inside the Supabase Edge Function environment (`supabase secrets set` or dashboard → Functions → Settings). Do **not** expose it to the frontend; the function proxies all caption requests. Get your RapidAPI key from [RapidAPI Dashboard](https://rapidapi.com/hub) after subscribing to the YouTube Transcriptor API.
+
+> The Edge Function also needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` so it can insert/update `videos`, `reading_segments`, and `study_sessions` on behalf of the authenticated user. Store those secrets alongside `RAPIDAPI_KEY`.
 
 ---
 
-### 5. Suggested automation flow
+### 5. Edge Function: `fetch-youtube-caption`
+
+- Source: `supabase/functions/fetch-youtube-caption/index.ts`
+- Purpose: Calls RapidAPI YouTube Transcriptor API to retrieve video transcripts, then:
+  - Upserts the video metadata into `videos`
+  - Rebuilds `reading_segments` for that video (using RapidAPI timestamps)
+  - Upserts/creates a `study_session` with status `ready`
+  - Returns `{ transcript, language, videoUuid, sessionId, youtubeVideoId }` for the frontend UI.
+- Error handling: If the video lacks captions, the function responds with HTTP 404 and `{"error":"Video này không có caption"}` so the frontend can translate the message directly to the UI.
+- Deployment:
+  ```bash
+  cd /Users/nbtrong/Documents/self-learn
+  supabase functions deploy fetch-youtube-caption \
+    --project-ref prxsyvwhysitbpdfbigh \
+    --env-file supabase/.env
+  ```
+  Ensure the secret exists before deploying:
+  ```bash
+  supabase secrets set --project-ref prxsyvwhysitbpdfbigh RAPIDAPI_KEY=your_rapidapi_key_here
+  ```
+
+---
+
+### 6. Suggested automation flow
 
 1. **Frontend** uses `@supabase/supabase-js` via `src/lib/supabaseClient.ts`.
 2. **Edge Function / Worker** receives a YouTube URL, generates:
@@ -86,7 +114,7 @@ Fill in the missing values:
 
 ---
 
-### 6. Using Supabase MCP (optional)
+### 7. Using Supabase MCP (optional)
 
 If you want to orchestrate Supabase directly from Cursor/Claude:
 1. Generate a **Personal Access Token** in Supabase Dashboard → Account Settings.

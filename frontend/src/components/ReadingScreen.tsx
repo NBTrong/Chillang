@@ -166,13 +166,13 @@ const ReadingScreen = () => {
 
   return (
     <div className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,_1fr)_320px]">
-      <section className="flex flex-col rounded-[32px] border border-border-primary bg-bg-secondary p-6 shadow-[0px_20px_70px_rgba(5,6,12,0.45)] md:p-10">
+      <section className="flex flex-col rounded-2xl border border-border-primary bg-bg-secondary p-6 shadow-chill-lg transition-chill md:p-10">
         {/* Navigation */}
         <div className="mb-6 flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition hover:text-primary"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-chill hover:text-accent-primary hover:bg-interactive-hover"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -193,10 +193,10 @@ const ReadingScreen = () => {
             </div>
             <button
               type="button"
-              className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition whitespace-nowrap ${
+              className={`flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-chill whitespace-nowrap hover-scale ${
                 showSummary
-                  ? 'bg-text-inverse text-bg-primary'
-                  : 'border border-border-primary text-text-primary hover:bg-interactive-hover'
+                  ? 'gradient-primary text-white shadow-glow-primary-light'
+                  : 'border border-border-primary text-text-primary hover:bg-interactive-hover hover:border-border-accent'
               }`}
               onClick={() => setShowSummary((prev) => !prev)}
             >
@@ -209,16 +209,16 @@ const ReadingScreen = () => {
         {/* Metadata and Controls */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="rounded-full bg-bg-tertiary px-3 py-1.5 typo-body-sm font-semibold text-accent-primary">Difficulty · B1</span>
+            <span className="rounded-full bg-accent-primary-light/20 px-3 py-1.5 typo-body-sm font-semibold text-accent-primary border border-accent-primary/20">Difficulty · B1</span>
             <span className="typo-body-sm text-text-secondary">742 words · 6m 40s</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
                 fontSize === 'md'
-                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
+                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
               }`}
               onClick={() => setFontSize('md')}
             >
@@ -226,10 +226,10 @@ const ReadingScreen = () => {
             </button>
             <button
               type="button"
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
                 fontSize === 'lg'
-                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
+                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
               }`}
               onClick={() => setFontSize('lg')}
             >
@@ -237,10 +237,10 @@ const ReadingScreen = () => {
             </button>
             <button
               type="button"
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
                 showTranslation
-                  ? 'border-accent-primary bg-accent-primary/10 text-text-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover'
+                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
+                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
               }`}
               onClick={() => setShowTranslation((prev) => !prev)}
             >
@@ -250,12 +250,12 @@ const ReadingScreen = () => {
         </div>
 
         {showSummary && (
-          <div className="mb-8 rounded-2xl border border-border-primary bg-bg-tertiary/80 p-5">
+          <div className="mb-8 rounded-xl border border-border-accent bg-bg-tertiary/60 p-5 shadow-chill-sm transition-chill">
             <p className="mb-4 typo-caption font-semibold text-text-tertiary">QUICK DIGEST</p>
             <ul className="space-y-3 typo-body-sm text-text-secondary">
               {summaryHighlights.map((point) => (
                 <li key={point} className="flex items-start gap-3">
-                  <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary" />
+                  <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary shadow-glow-primary-light" />
                   <span>{point}</span>
                 </li>
               ))}
@@ -289,10 +289,10 @@ const ReadingScreen = () => {
                           handleSentenceSelect(sentence.id)
                         }
                       }}
-                      className={`cursor-pointer rounded-2xl border-2 px-6 py-5 transition ${
+                      className={`cursor-pointer rounded-xl border-2 px-6 py-5 transition-chill hover-scale ${
                         isActive
-                          ? 'border-accent-primary bg-accent-primary/5 shadow-[0_0_20px_rgba(60,106,254,0.2)]'
-                          : 'border-transparent bg-transparent hover:bg-interactive-hover'
+                          ? 'border-border-accent bg-accent-primary-light/10 shadow-glow-primary-light'
+                          : 'border-transparent bg-transparent hover:bg-interactive-hover hover:border-border-primary'
                       }`}
                     >
                       <p className={`typo-body text-left leading-relaxed text-text-primary ${fontSizeClass}`}>
@@ -317,8 +317,8 @@ const ReadingScreen = () => {
                             <button
                               key={`${sentence.id}-${index}`}
                               type="button"
-                              className={`relative inline-flex items-center rounded-md px-1.5 py-0.5 text-inherit transition ${
-                                isSelectedWord ? 'bg-accent-primary/30 text-text-primary' : 'hover:bg-interactive-hover'
+                              className={`relative inline-flex items-center rounded-md px-1.5 py-0.5 text-inherit transition-chill ${
+                                isSelectedWord ? 'bg-accent-primary-light/40 text-accent-primary font-medium' : 'hover:bg-interactive-hover hover:text-accent-primary'
                               }`}
                               onClick={(event) => {
                                 event.stopPropagation()
@@ -342,32 +342,32 @@ const ReadingScreen = () => {
         </div>
 
         {activeSentence && (
-          <div className="mt-8 rounded-3xl border border-border-primary bg-bg-tertiary/90 p-5 typo-body-sm text-text-primary">
+          <div className="mt-8 rounded-xl border border-border-accent bg-bg-tertiary/80 p-5 typo-body-sm text-text-primary shadow-chill-md transition-chill">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="typo-caption text-text-tertiary">Mini Player</p>
                 <p className="mt-2 typo-body text-text-primary">{activeSentence.text}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-secondary text-lg transition hover:bg-interactive-hover">
+                <button className="flex h-12 w-12 items-center justify-center rounded-lg border border-border-primary bg-bg-secondary text-lg transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
                   ⏮
                 </button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-text-inverse text-bg-primary text-xl transition hover:bg-text-inverse/90">
+                <button className="flex h-12 w-12 items-center justify-center rounded-lg gradient-primary text-white text-xl shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary">
                   ▶
                 </button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-secondary text-lg transition hover:bg-interactive-hover">
+                <button className="flex h-12 w-12 items-center justify-center rounded-lg border border-border-primary bg-bg-secondary text-lg transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
                   ⏭
                 </button>
               </div>
             </div>
-            <div className="mt-4 h-1 w-full rounded-full bg-border-divider">
-              <div className="h-full rounded-full bg-gradient-to-r from-accent-primary to-accent-secondary" style={{ width: '62%' }} />
+            <div className="mt-4 h-1.5 w-full rounded-full bg-border-divider overflow-hidden">
+              <div className="h-full rounded-full gradient-secondary transition-all duration-500" style={{ width: '62%' }} />
             </div>
           </div>
         )}
       </section>
 
-      <aside className="hidden rounded-[32px] border border-border-primary bg-bg-secondary/90 p-6 typo-body-sm text-text-primary lg:flex lg:flex-col">
+      <aside className="hidden rounded-2xl border border-border-primary bg-bg-secondary/90 p-6 typo-body-sm text-text-primary shadow-chill-sm lg:flex lg:flex-col">
         <div className="mb-6 flex items-center justify-between">
           <p className="typo-caption font-semibold text-text-tertiary">TIMESTAMPS</p>
           <div className="flex items-center gap-2">
@@ -394,10 +394,10 @@ const ReadingScreen = () => {
               <button
                 key={marker.id}
                 type="button"
-                className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
+                className={`w-full rounded-xl border px-4 py-4 text-left transition-chill hover-scale ${
                   isActive
-                    ? 'border-accent-primary bg-accent-primary/10'
-                    : 'border-border-primary bg-bg-secondary hover:bg-interactive-hover'
+                    ? 'border-border-accent bg-accent-primary-light/20 shadow-chill-sm'
+                    : 'border-border-primary bg-bg-secondary hover:bg-interactive-hover hover:border-border-primary'
                 }`}
                 onClick={() => {
                   const firstSentence = readingSections.find((section) => section.id === marker.id)?.sentences[0]
@@ -417,7 +417,7 @@ const ReadingScreen = () => {
                     </svg>
                     <span className="typo-body-sm font-medium text-text-secondary">{marker.time}</span>
                   </div>
-                  {isActive && <span className="h-2 w-2 rounded-full bg-success" />}
+                  {isActive && <span className="h-2 w-2 rounded-full bg-accent-secondary shadow-glow-primary-light" />}
                 </div>
                 <p className="typo-subtitle font-semibold text-text-primary">{marker.label}</p>
                 <p className="mt-1.5 typo-body-sm leading-relaxed text-text-secondary">{marker.description}</p>
@@ -428,12 +428,12 @@ const ReadingScreen = () => {
       </aside>
 
       {selectedEntry && (
-        <div className="fixed bottom-6 left-1/2 z-20 w-[min(480px,90vw)] -translate-x-1/2 rounded-[28px] border border-border-primary bg-bg-secondary/95 p-6 backdrop-blur-xl shadow-[0_30px_120px_rgba(5,6,12,0.95)]">
+        <div className="fixed bottom-6 left-1/2 z-20 w-[min(480px,90vw)] -translate-x-1/2 rounded-2xl border border-border-accent bg-bg-secondary/95 p-6 backdrop-blur-xl shadow-chill-dark">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex-1">
               <div className="mb-2 flex items-center gap-3">
                 <h3 className="typo-title capitalize text-text-primary">{selectedWord}</h3>
-                <span className="rounded-lg bg-bg-tertiary px-2.5 py-1 typo-body-sm font-medium uppercase text-accent-primary">
+                <span className="rounded-lg bg-accent-primary-light/20 border border-accent-primary/30 px-2.5 py-1 typo-body-sm font-medium uppercase text-accent-primary">
                   {selectedEntry.type}
                 </span>
               </div>
@@ -447,18 +447,18 @@ const ReadingScreen = () => {
             <button
               type="button"
               onClick={() => setSelectedWord(null)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-text-tertiary transition hover:bg-interactive-hover"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-text-tertiary transition-chill hover:bg-interactive-hover hover:text-text-primary"
             >
               ×
             </button>
           </div>
           <p className="mb-3 typo-body-sm text-text-secondary">{selectedEntry.meaning}</p>
           <div className="mt-4 flex items-center gap-2">
-            <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-text-inverse px-4 py-3 text-sm font-semibold text-bg-primary transition hover:bg-text-inverse/90">
+            <button className="flex flex-1 items-center justify-center gap-2 rounded-xl gradient-primary px-4 py-3 text-sm font-semibold text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary">
               <span>➕</span> 
               <span>Add to Flashcard</span>
             </button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border-primary bg-bg-tertiary text-lg text-text-primary transition hover:bg-interactive-hover">
+            <button className="flex h-12 w-12 items-center justify-center rounded-xl border border-border-primary bg-bg-tertiary text-lg text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
               🔊
             </button>
           </div>

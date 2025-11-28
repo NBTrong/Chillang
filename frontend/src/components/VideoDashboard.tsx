@@ -62,7 +62,7 @@ const VideoDashboard = () => {
       <div className="space-y-6">
         <div className="w-full">
           <div
-            className="relative w-full overflow-hidden rounded-[32px] border border-border-primary shadow-[0_20px_80px_rgba(0,0,0,0.25)] bg-bg-secondary"
+            className="relative w-full overflow-hidden rounded-2xl border border-border-primary shadow-chill-lg bg-bg-secondary transition-chill hover:shadow-chill-dark"
             style={{ aspectRatio: '16/9' }}
           >
             <img
@@ -90,13 +90,13 @@ const VideoDashboard = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary">
+          <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary transition-chill hover:bg-interactive-hover">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span>12 phút</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary">
+          <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary transition-chill hover:bg-interactive-hover">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
@@ -107,11 +107,11 @@ const VideoDashboard = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border-primary bg-bg-secondary px-5 py-6 shadow-sm">
+        <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">TOTAL VOCABULARY</p>
           <p className="mt-3 text-4xl font-bold text-text-primary">{videoStats.totalVocabulary}</p>
         </div>
-        <div className="rounded-xl border border-border-primary bg-bg-secondary px-5 py-6 shadow-sm">
+        <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">AI DIFFICULTY</p>
           <p className="mt-3 text-2xl font-bold text-text-primary">{videoStats.difficulty}</p>
         </div>
@@ -128,10 +128,10 @@ const VideoDashboard = () => {
               <button
               key={mode.id}
               onClick={() => handleModeClick(mode.id)}
-              className="group flex h-full flex-col rounded-xl border border-border-primary bg-bg-secondary p-5 text-left transition-all hover:border-border-primary/80 hover:bg-interactive-hover hover:shadow-lg"
+              className="group flex h-full flex-col rounded-lg border border-border-primary bg-bg-secondary p-5 text-left transition-chill hover-scale hover:border-border-accent hover:bg-interactive-hover hover:shadow-chill-md"
             >
               {/* Icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl text-accent-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent-primary-light/20 text-accent-primary transition-chill group-hover:bg-accent-primary-light/30">
                 {mode.id === 'reading' && (
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -162,7 +162,11 @@ const VideoDashboard = () => {
               </div>
 
               {/* Progress bar for reading mode */}
-              {mode.footer}
+              {mode.id === 'reading' && (
+                <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-bg-tertiary">
+                  <div className="h-full rounded-full gradient-secondary transition-all duration-500" style={{ width: '75%' }} />
+                </div>
+              )}
             </button>
           ))}
         </div>

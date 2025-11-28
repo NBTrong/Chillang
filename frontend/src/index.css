@@ -13,37 +13,52 @@ html {
   font-size: 14px;
   line-height: 1.5;
   
-  /* Light Mode - Default */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #e9ecef;
-  --bg-overlay: rgba(255, 255, 255, 0.9);
+  /* Chill Theme - Light Mode (Chill Day) */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #F1F5F9;
+  --bg-tertiary: #E2E8F0;
+  --bg-overlay: rgba(248, 250, 252, 0.95);
   
-  --text-primary: #1a1d29;
-  --text-secondary: #4b5563;
-  --text-tertiary: #9ca3af;
-  --text-inverse: #ffffff;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #F8FAFC;
   
-  --accent-primary: #2563eb;
-  --accent-primary-hover: #1d4ed8;
-  --accent-secondary: #059669;
+  /* Primary Accent - Sky Blue */
+  --accent-primary: #3B82F6;
+  --accent-primary-hover: #2563EB;
+  --accent-primary-light: #DBEAFE;
   
-  --color-success: #059669;
-  --color-success-hover: #047857;
-  --color-warning: #d97706;
-  --color-warning-hover: #b45309;
-  --color-error: #dc2626;
-  --color-error-hover: #b91c1c;
-  --color-info: #0284c7;
-  --color-info-hover: #0369a1;
+  /* Secondary Accent - Mint Green */
+  --accent-secondary: #10B981;
+  --accent-secondary-hover: #059669;
   
-  --border-primary: rgba(0, 0, 0, 0.1);
-  --border-secondary: rgba(0, 0, 0, 0.05);
-  --border-divider: rgba(0, 0, 0, 0.08);
+  /* Accent Colors */
+  --accent-purple: #8B5CF6;
+  --accent-purple-hover: #7C3AED;
+  --accent-peach: #FB7185;
+  --accent-amber: #F59E0B;
   
-  --interactive-hover: rgba(0, 0, 0, 0.03);
-  --interactive-active: rgba(0, 0, 0, 0.05);
-  --interactive-disabled: rgba(0, 0, 0, 0.2);
+  /* Semantic Colors */
+  --color-success: #10B981;
+  --color-success-hover: #059669;
+  --color-warning: #F59E0B;
+  --color-warning-hover: #D97706;
+  --color-error: #EF4444;
+  --color-error-hover: #DC2626;
+  --color-info: #3B82F6;
+  --color-info-hover: #2563EB;
+  
+  /* Border Colors */
+  --border-primary: rgba(59, 130, 246, 0.2);
+  --border-secondary: rgba(59, 130, 246, 0.1);
+  --border-accent: rgba(16, 185, 129, 0.3);
+  --border-divider: rgba(148, 163, 184, 0.2);
+  
+  /* Interactive States */
+  --interactive-hover: rgba(59, 130, 246, 0.05);
+  --interactive-active: rgba(59, 130, 246, 0.1);
+  --interactive-disabled: rgba(148, 163, 184, 0.4);
   
   /* Apply to body for light mode */
   color: var(--text-primary);
@@ -51,37 +66,52 @@ html {
 }
 
 .dark {
-  /* Dark Mode */
-  --bg-primary: #0f1117;
-  --bg-secondary: #1a1d29;
-  --bg-tertiary: #252937;
-  --bg-overlay: rgba(15, 17, 23, 0.8);
+  /* Chill Theme - Dark Mode (Chill Night) */
+  --bg-primary: #0A0E1A;
+  --bg-secondary: #141B2D;
+  --bg-tertiary: #1E2A3F;
+  --bg-overlay: rgba(10, 14, 26, 0.85);
   
-  --text-primary: #f3f4f7;
-  --text-secondary: #b8bcc8;
-  --text-tertiary: #8b90a0;
-  --text-inverse: #0f1117;
+  --text-primary: #F0F4F8;
+  --text-secondary: #B8C5D6;
+  --text-tertiary: #7A8FA3;
+  --text-inverse: #0A0E1A;
   
-  --accent-primary: #4f7cff;
-  --accent-primary-hover: #6b8eff;
-  --accent-secondary: #10b981;
+  /* Primary Accent - Sky Blue */
+  --accent-primary: #5B9BD5;
+  --accent-primary-hover: #7BB3E8;
+  --accent-primary-light: #A8D0E6;
   
-  --color-success: #10b981;
-  --color-success-hover: #059669;
-  --color-warning: #f59e0b;
-  --color-warning-hover: #d97706;
-  --color-error: #ef4444;
-  --color-error-hover: #dc2626;
-  --color-info: #3b82f6;
-  --color-info-hover: #2563eb;
+  /* Secondary Accent - Mint Green */
+  --accent-secondary: #6BC4A6;
+  --accent-secondary-hover: #7DD3B0;
   
-  --border-primary: rgba(255, 255, 255, 0.1);
-  --border-secondary: rgba(255, 255, 255, 0.05);
-  --border-divider: rgba(255, 255, 255, 0.08);
+  /* Accent Colors */
+  --accent-purple: #A78BFA;
+  --accent-purple-hover: #C4B5FD;
+  --accent-peach: #F9A8D4;
+  --accent-amber: #FBBF24;
   
-  --interactive-hover: rgba(255, 255, 255, 0.05);
-  --interactive-active: rgba(255, 255, 255, 0.1);
-  --interactive-disabled: rgba(255, 255, 255, 0.2);
+  /* Semantic Colors */
+  --color-success: #6BC4A6;
+  --color-success-hover: #7DD3B0;
+  --color-warning: #FBBF24;
+  --color-warning-hover: #F59E0B;
+  --color-error: #EF6B6B;
+  --color-error-hover: #FF8A8A;
+  --color-info: #5B9BD5;
+  --color-info-hover: #7BB3E8;
+  
+  /* Border Colors */
+  --border-primary: rgba(91, 155, 213, 0.2);
+  --border-secondary: rgba(91, 155, 213, 0.1);
+  --border-accent: rgba(107, 196, 166, 0.3);
+  --border-divider: rgba(184, 197, 214, 0.15);
+  
+  /* Interactive States */
+  --interactive-hover: rgba(91, 155, 213, 0.08);
+  --interactive-active: rgba(91, 155, 213, 0.15);
+  --interactive-disabled: rgba(122, 143, 163, 0.3);
   
   /* Apply to body for dark mode */
   color: var(--text-primary);
@@ -97,7 +127,8 @@ body {
   min-height: 100vh;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #root {
@@ -119,8 +150,16 @@ body {
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.7;
-  --letter-spacing-tight: -0.03em;
+  --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
+  
+  /* Border Radius - Chill Style (Rounded & Soft) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
 }
 
 @layer base {
@@ -156,7 +195,7 @@ body {
 
   p {
     font-size: var(--font-size-body);
-    line-height: var(--line-height-normal);
+    line-height: var(--line-height-relaxed);
     color: var(--text-secondary);
   }
 
@@ -204,5 +243,55 @@ body {
     line-height: var(--line-height-normal);
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+  
+  /* Chill Theme - Gradient Utilities */
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-secondary-hover) 100%);
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  }
+  
+  /* Chill Theme - Glow Effects */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(91, 155, 213, 0.4);
+  }
+  
+  .glow-primary-light {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  
+  /* Smooth Transitions */
+  .transition-chill {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Hover Scale Effect */
+  .hover-scale {
+    transition: transform 0.2s ease-out;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  /* Pulse Animation for Loading */
+  @keyframes pulse-chill {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse-chill {
+    animation: pulse-chill 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }

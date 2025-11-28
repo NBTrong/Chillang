@@ -65,7 +65,7 @@ const DictationScreen = () => {
             return (
               <span
                 key={index}
-                className={isCorrect ? 'text-[#4ade80] font-semibold' : 'text-[#ef4444] font-semibold'}
+                className={isCorrect ? 'text-accent-secondary font-semibold' : 'text-error font-semibold'}
               >
                 {part}
               </span>
@@ -80,12 +80,12 @@ const DictationScreen = () => {
   return (
     <div className="flex min-h-screen flex-col bg-bg-primary text-text-primary">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border-primary bg-bg-secondary px-6 py-4">
+      <header className="flex items-center justify-between border-b border-border-primary bg-bg-secondary px-6 py-4 shadow-chill-sm">
         <h1 className="typo-title text-text-primary">Dictation: Lesson 1 - Part 3</h1>
         <button
           type="button"
           onClick={handleClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-xl text-text-primary transition hover:bg-interactive-hover"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-xl text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           aria-label="Close"
         >
           ×
@@ -101,7 +101,7 @@ const DictationScreen = () => {
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-bg-tertiary">
               <div
-                className="h-full rounded-full bg-success transition-all duration-300"
+                className="h-full rounded-full gradient-secondary transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -109,7 +109,7 @@ const DictationScreen = () => {
 
           {/* Feedback Section */}
           {showFeedback && feedback && (
-            <div className="space-y-4 rounded-2xl border border-border-primary bg-bg-secondary p-6">
+            <div className="space-y-4 rounded-xl border border-border-accent bg-bg-secondary p-6 shadow-chill-md transition-chill">
               <div className="space-y-2">
                 <p className="typo-body-sm text-text-secondary">Your answer:</p>
                 <p className="typo-body text-text-primary">
@@ -127,7 +127,7 @@ const DictationScreen = () => {
 
           {/* Input Section */}
           <div className="relative">
-            <div className="relative rounded-3xl border border-border-primary bg-bg-secondary p-6">
+            <div className="relative rounded-2xl border border-border-primary bg-bg-secondary p-6 shadow-chill-sm transition-chill focus-within:border-border-accent focus-within:shadow-chill-md">
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
@@ -141,7 +141,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleReplay}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
                   aria-label="Replay"
                 >
                   <svg
@@ -161,7 +161,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleHint}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
                   aria-label="Hint"
                 >
                   <svg
@@ -181,7 +181,7 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition hover:bg-interactive-hover"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
                   aria-label="Skip"
                 >
                   <svg
@@ -212,7 +212,7 @@ const DictationScreen = () => {
             <button
               type="button"
               onClick={handleCheckAnswer}
-              className="rounded-2xl bg-text-inverse px-8 py-3 text-base font-semibold text-bg-primary shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-text-inverse/90"
+              className="rounded-xl gradient-primary px-8 py-3 text-base font-semibold text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary"
             >
               Check Answer
             </button>

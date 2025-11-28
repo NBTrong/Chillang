@@ -32,7 +32,10 @@ Bạn có thể chuyển tiếp toàn bộ nội dung dưới đây cho đội n
         * *Placeholder:* "Dán link YouTube video vào đây..."
         * *Icons trong Input:* Paste Button, Send Button (Mũi tên).
 * **Interaction:**
-    * User paste link -> Bấm Send -> Hiển thị trạng thái "Processing AI..." (Loading) -> Chuyển thẳng sang **Màn hình 3 (Video Dashboard)**.
+    * User paste link -> Bấm Send -> App gọi Supabase Edge Function `fetch-youtube-caption` để lấy transcript/caption từ RapidAPI YouTube Transcriptor API (backend sử dụng RapidAPI thay vì YouTube Data API v3 để đơn giản hóa quy trình).
+    * Backend đồng thời lưu metadata video + transcript vào `videos`/`reading_segments`, tạo (hoặc cập nhật) `study_session` trạng thái `ready`, sau đó trả transcript + session info cho frontend.
+    * Nếu video có caption: Hiển thị transcript ngay bên dưới input (scrollable), đồng thời hiện CTA “Mở Video Dashboard” (navigate tới **Màn hình 3** với `youtube_video_id`).
+    * Nếu video không có caption: Hiển thị lỗi `"Video này không có caption"` ngay dưới input.
 
 ### 2. Sidebar (Navigation Drawer - "My Library")
 *Trượt ra từ cạnh trái. Quản lý tài nguyên.*

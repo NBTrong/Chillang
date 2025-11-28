@@ -81,7 +81,7 @@ const ListeningScreen = () => {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="transition hover:text-text-primary"
+            className="transition-chill hover:text-accent-primary"
           >
             Home
           </button>
@@ -89,7 +89,7 @@ const ListeningScreen = () => {
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="transition hover:text-text-primary"
+            className="transition-chill hover:text-accent-primary"
           >
             Intermediate English
           </button>
@@ -108,7 +108,7 @@ const ListeningScreen = () => {
         {/* Video and Transcript Section */}
         <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_400px]">
           {/* Video Player */}
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border-primary bg-bg-secondary">
+          <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border-primary bg-bg-secondary shadow-chill-md transition-chill">
             {/* Background pattern */}
             <div
               className="absolute inset-0 opacity-30"
@@ -121,7 +121,7 @@ const ListeningScreen = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
                 <div className="absolute inset-0 rounded-lg bg-accent-primary opacity-20 blur-2xl" />
-                <div className="relative flex h-32 w-32 items-center justify-center rounded-lg border border-accent-primary/30 bg-gradient-to-br from-bg-tertiary to-bg-secondary text-4xl font-bold text-text-primary shadow-[0_0_30px_rgba(49,64,255,0.5)]">
+                <div className="relative flex h-32 w-32 items-center justify-center rounded-lg border border-accent-primary/30 bg-gradient-to-br from-bg-tertiary to-bg-secondary text-4xl font-bold text-text-primary shadow-glow-primary">
                   AI
                 </div>
               </div>
@@ -129,7 +129,7 @@ const ListeningScreen = () => {
             
             {/* Play button overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <button className="flex h-16 w-16 items-center justify-center rounded-full bg-text-inverse text-2xl text-bg-primary shadow-lg transition hover:bg-text-inverse/95">
+              <button className="flex h-16 w-16 items-center justify-center rounded-full gradient-primary text-2xl text-white shadow-glow-primary transition-chill hover-scale hover:shadow-glow-primary">
                 ▶
               </button>
             </div>
@@ -140,25 +140,25 @@ const ListeningScreen = () => {
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(totalDuration)}</span>
               </div>
-              <div className="mb-3 h-1.5 w-full rounded-full bg-text-inverse/20">
+              <div className="mb-3 h-1.5 w-full rounded-full bg-text-inverse/20 overflow-hidden">
                 <div 
-                  className="h-full rounded-full bg-text-inverse transition-all"
+                  className="h-full rounded-full gradient-secondary transition-all duration-300"
                   style={{ width: `${(currentTime / totalDuration) * 100}%` }}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
+                  <button className="flex h-9 w-9 items-center justify-center rounded-lg text-text-inverse transition-chill hover:bg-text-inverse/20 hover-scale">
                     🔊
                   </button>
-                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse text-xs font-medium transition hover:bg-text-inverse/10">
+                  <button className="flex h-9 w-9 items-center justify-center rounded-lg text-text-inverse text-xs font-medium transition-chill hover:bg-text-inverse/20 hover-scale">
                     CC
                   </button>
-                  <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
+                  <button className="flex h-9 w-9 items-center justify-center rounded-lg text-text-inverse transition-chill hover:bg-text-inverse/20 hover-scale">
                     ⚙️
                   </button>
                 </div>
-                <button className="flex h-9 w-9 items-center justify-center rounded text-text-inverse transition hover:bg-text-inverse/10">
+                <button className="flex h-9 w-9 items-center justify-center rounded-lg text-text-inverse transition-chill hover:bg-text-inverse/20 hover-scale">
                   ⛶
                 </button>
               </div>
@@ -167,7 +167,7 @@ const ListeningScreen = () => {
 
           {/* Transcript Panel */}
           {showTranscript && (
-            <div className="rounded-2xl border border-border-primary bg-bg-secondary p-4">
+            <div className="rounded-xl border border-border-primary bg-bg-secondary p-4 shadow-chill-sm transition-chill">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="typo-subtitle text-text-primary">Transcript</h3>
                   <label className="flex items-center gap-2 typo-body-sm text-text-secondary">
@@ -184,9 +184,9 @@ const ListeningScreen = () => {
                   {transcriptEntries.map((entry, index) => (
                     <div
                       key={index}
-                      className={`rounded-lg p-3 transition ${
+                      className={`rounded-lg p-3 transition-chill ${
                         entry.highlighted
-                          ? 'border border-accent-primary/30 bg-accent-primary/10 text-accent-primary'
+                          ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
                           : 'bg-bg-tertiary text-text-secondary'
                       }`}
                     >
@@ -200,20 +200,20 @@ const ListeningScreen = () => {
         </div>
 
         {/* Results Section */}
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex items-center gap-4 rounded-xl border border-border-primary bg-bg-secondary px-6 py-3">
+        <div className="mb-8 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-4 rounded-lg border border-border-accent bg-accent-secondary/10 px-6 py-3 shadow-chill-sm">
             <p className="typo-caption text-text-tertiary">Result</p>
-            <p className="typo-title leading-none text-success">{score}/{totalQuestions}</p>
+            <p className="typo-title leading-none text-accent-secondary">{score}/{totalQuestions}</p>
           </div>
           <button
             onClick={() => navigate(`/${videoId}/dash`)}
-          className="rounded-xl border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary hover:bg-interactive-hover"
+            className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           >
             Try Again
           </button>
           <button
             onClick={() => setShowTranscript(!showTranscript)}
-          className="rounded-xl border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary hover:bg-interactive-hover"
+            className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           >
             {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
           </button>
@@ -226,7 +226,7 @@ const ListeningScreen = () => {
               const isIncorrect = q.userAnswer !== undefined && q.userAnswer !== q.correctAnswer
 
               return (
-                <div key={q.id} className="rounded-2xl border border-border-primary bg-bg-secondary p-6">
+                <div key={q.id} className="rounded-xl border border-border-primary bg-bg-secondary p-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
                   <h3 className="mb-4 typo-subtitle font-semibold text-text-primary">{q.question}</h3>
                   <div className="space-y-3">
                     {q.options.map((option, index) => {
@@ -235,25 +235,25 @@ const ListeningScreen = () => {
                       let optionStyle = 'border-border-primary bg-bg-tertiary text-text-secondary'
 
                       if (isSelected && isCorrect) {
-                        optionStyle = 'border-success bg-success/10 text-success'
+                        optionStyle = 'border-accent-secondary bg-accent-secondary/10 text-accent-secondary'
                       } else if (isSelected && isIncorrect) {
                         optionStyle = 'border-error bg-error/10 text-error'
                       } else if (isCorrectOption && isIncorrect) {
-                        optionStyle = 'border-success/50 bg-success/5 text-success'
+                        optionStyle = 'border-accent-secondary/50 bg-accent-secondary/5 text-accent-secondary'
                       }
 
                       return (
                         <label
                           key={index}
-                          className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${optionStyle} ${
-                            !isSelected && !isCorrectOption ? 'hover:bg-interactive-hover' : ''
+                          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-chill ${optionStyle} ${
+                            !isSelected && !isCorrectOption ? 'hover:bg-interactive-hover hover:border-border-accent hover-scale' : ''
                           }`}
                         >
                           <div className="mt-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-current">
                             {isSelected && (
                               <div
                                 className={`h-2.5 w-2.5 rounded-full ${
-                                  isCorrect ? 'bg-success' : 'bg-error'
+                                  isCorrect ? 'bg-accent-secondary shadow-glow-primary-light' : 'bg-error'
                                 }`}
                               />
                             )}
@@ -265,8 +265,10 @@ const ListeningScreen = () => {
                   </div>
                   {(isCorrect || isIncorrect) && (
                     <div
-                      className={`mt-4 rounded-xl border p-4 ${
-                        isCorrect ? 'border-success/30 bg-success/5 text-success' : 'border-error/30 bg-error/5 text-error'
+                      className={`mt-4 rounded-lg border p-4 transition-chill ${
+                        isCorrect 
+                          ? 'border-border-accent bg-accent-secondary/10 text-accent-secondary shadow-chill-sm' 
+                          : 'border-error/30 bg-error/5 text-error'
                       }`}
                     >
                       <p className="typo-body-sm">

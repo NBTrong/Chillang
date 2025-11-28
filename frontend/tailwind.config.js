@@ -26,7 +26,13 @@ export default {
         accent: {
           primary: 'var(--accent-primary)',
           'primary-hover': 'var(--accent-primary-hover)',
+          'primary-light': 'var(--accent-primary-light)',
           secondary: 'var(--accent-secondary)',
+          'secondary-hover': 'var(--accent-secondary-hover)',
+          purple: 'var(--accent-purple)',
+          'purple-hover': 'var(--accent-purple-hover)',
+          peach: 'var(--accent-peach)',
+          amber: 'var(--accent-amber)',
         },
         // Semantic colors
         success: {
@@ -49,6 +55,7 @@ export default {
         border: {
           primary: 'var(--border-primary)',
           secondary: 'var(--border-secondary)',
+          accent: 'var(--border-accent)',
           divider: 'var(--border-divider)',
         },
         // Interactive states
@@ -73,7 +80,23 @@ export default {
       borderColor: {
         'primary': 'var(--border-primary)',
         'secondary': 'var(--border-secondary)',
+        'accent': 'var(--border-accent)',
         'divider': 'var(--border-divider)',
+      },
+      borderRadius: {
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
+        'xl': 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+      },
+      boxShadow: {
+        'glow-primary': '0 0 20px rgba(91, 155, 213, 0.4)',
+        'glow-primary-light': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'chill-sm': '0 2px 8px rgba(0, 0, 0, 0.08)',
+        'chill-md': '0 4px 16px rgba(0, 0, 0, 0.1)',
+        'chill-lg': '0 8px 24px rgba(0, 0, 0, 0.15)',
+        'chill-dark': '0 8px 32px rgba(0, 0, 0, 0.4)',
       },
     },
   },
