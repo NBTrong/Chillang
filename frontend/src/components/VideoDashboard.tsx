@@ -1,63 +1,238 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-
-const videoStats = {
-  title: 'The Art of Storytelling: How to Captivate Your Audience',
-  totalVocabulary: 256,
-  difficulty: 'B2 Intermediate',
-  cover: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1400&q=80',
-}
-
-const modes = [
-  {
-    id: 'reading',
-    title: 'Reading Comprehension',
-    subtitle: 'Đọc hiểu & Tra từ vựng',
-    metricLabel: 'Progress',
-    metricValue: '75%',
-    accentColor: '#4ade80',
-    footer: (
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-[#4ade80]" style={{ width: '75%' }} />
-      </div>
-    ),
-  },
-  {
-    id: 'listening',
-    title: 'Listening Comprehension',
-    subtitle: 'Nghe & Làm bài tập Quiz',
-    metricLabel: 'High Score',
-    metricValue: '92/100',
-    accentColor: '#60a5fa',
-  },
-  {
-    id: 'dictation',
-    title: 'Dictation',
-    subtitle: 'Luyện nghe & Chép chính tả',
-    metricLabel: 'Completed',
-    metricValue: '15/28 Sentences',
-    accentColor: '#fbbf24',
-  },
-]
+import {
+  fetchVideoByYoutubeId,
+  fetchStudySessionByVideoId,
+  countVocabularyByVideo,
+  fetchReadingSegments,
+  type VideoRecord,
+  type StudySessionRecord,
+} from '../services/supabaseApi'
 
 const VideoDashboard = () => {
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
   const titleRef = useRef<HTMLHeadingElement | null>(null)
+  const modeSectionRef = useRef<HTMLDivElement | null>(null)
+
+  const [video, setVideo] = useState<VideoRecord | null>(null)
+  const [session, setSession] = useState<StudySessionRecord | null>(null)
+  const [vocabularyCount, setVocabularyCount] = useState<number>(0)
+  const [totalSegments, setTotalSegments] = useState<number>(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [highlightedMode, setHighlightedMode] = useState<string | null>(null)
 
   useEffect(() => {
-    // Tự động focus vào title của video khi màn hình được mở
-    titleRef.current?.focus()
-  }, [])
+    if (!videoId) {
+      setError('Video ID không hợp lệ')
+      setIsLoading(false)
+      return
+    }
+
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const videoData = await fetchVideoByYoutubeId(videoId)
+
+        if (!videoData) {
+          setError('Không tìm thấy video')
+          setIsLoading(false)
+          return
+        }
+
+        setVideo(videoData)
+        
+        // Debug: log video title
+        console.log('Video title:', videoData.title)
+
+        const [sessionData, vocabCount, segments] = await Promise.all([
+          fetchStudySessionByVideoId(videoData.id),
+          countVocabularyByVideo(videoData.id),
+          fetchReadingSegments(videoData.id).catch(() => []),
+        ])
+
+        setSession(sessionData)
+        setVocabularyCount(vocabCount)
+        setTotalSegments(segments.length)
+      } catch (err) {
+        console.error('Failed to load video data', err)
+        setError('Không thể tải dữ liệu video')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [videoId])
+
+  // Auto-scroll from top to bottom when video is loaded
+  useEffect(() => {
+    if (!isLoading && video && !error) {
+      const highlightTimers: number[] = []
+      let isCleanedUp = false
+
+      // Wait a bit for content to render
+      const timer = setTimeout(() => {
+        const startPosition = 0
+        const endPosition = document.documentElement.scrollHeight - window.innerHeight
+        const duration = 1000 // 1 second
+        const startTime = performance.now()
+
+        const animateScroll = (currentTime: number) => {
+          if (isCleanedUp) return
+
+          const elapsed = currentTime - startTime
+          const progress = Math.min(elapsed / duration, 1)
+
+          // Ease-in function: slow at start, fast at end
+          const easeIn = (t: number) => {
+            return t * t * t // cubic ease-in
+          }
+
+          const currentPosition = startPosition + (endPosition - startPosition) * easeIn(progress)
+          window.scrollTo(0, currentPosition)
+
+          if (progress < 1) {
+            requestAnimationFrame(animateScroll)
+          } else {
+            // After scroll completes, start highlighting modes
+            const modeIds = ['reading', 'listening', 'dictation']
+
+            modeIds.forEach((modeId, index) => {
+              // Start highlight at index * 500ms
+              const highlightTimer = window.setTimeout(() => {
+                if (isCleanedUp) return
+                console.log(`[Highlight] Starting: ${modeId} at index ${index}`)
+                setHighlightedMode(modeId)
+                // Scroll to mode card if needed
+                const modeButton = document.querySelector(`[data-mode-id="${modeId}"]`) as HTMLElement
+                if (modeButton) {
+                  modeButton.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                // Remove highlight after 0.5s, but only if this is still the highlighted mode
+                const removeTimer = window.setTimeout(() => {
+                  if (isCleanedUp) return
+                  console.log(`[Highlight] Removing: ${modeId}`)
+                  setHighlightedMode((prev) => {
+                    // Only remove if this mode is still highlighted
+                    if (prev === modeId) {
+                      return null
+                    }
+                    return prev
+                  })
+                }, 500)
+                highlightTimers.push(removeTimer)
+              }, index * 500)
+              highlightTimers.push(highlightTimer)
+            })
+          }
+        }
+
+        // Scroll to top first, then start auto-scroll
+        window.scrollTo(0, 0)
+        setTimeout(() => {
+          if (!isCleanedUp) {
+            requestAnimationFrame(animateScroll)
+          }
+        }, 300)
+      }, 500)
+
+      return () => {
+        isCleanedUp = true
+        clearTimeout(timer)
+        highlightTimers.forEach((t) => clearTimeout(t))
+        setHighlightedMode(null)
+      }
+    }
+  }, [isLoading, video, error])
 
   const handleModeClick = (modeId: string) => {
     navigate(`/${videoId}/${modeId}`)
   }
 
-  return (
-    <div className="flex flex-1 flex-col gap-6 text-text-primary">
-      {/* Header with back button */}
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return null
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return secs > 0 ? `${mins} phút ${secs} giây` : `${mins} phút`
+  }
 
+  const readingProgress = session ? Math.round(session.reading_progress * 100) : 0
+  const listeningScore = session?.listening_high_score ?? null
+  const dictationCompleted = session?.dictation_completed ?? 0
+
+  const formatDifficulty = (level: string | null): string => {
+    if (!level) return 'Chưa đánh giá'
+    const levelMap: Record<string, string> = {
+      A1: 'A1 Beginner',
+      A2: 'A2 Elementary',
+      B1: 'B1 Intermediate',
+      B2: 'B2 Upper Intermediate',
+      C1: 'C1 Advanced',
+      C2: 'C2 Proficiency',
+      custom: 'Custom',
+    }
+    return levelMap[level] || level
+  }
+
+  const modes = [
+    {
+      id: 'reading',
+      title: 'Reading Comprehension',
+      subtitle: 'Đọc hiểu & Tra từ vựng',
+      metricLabel: 'Progress',
+      metricValue: `${readingProgress}%`,
+      progress: readingProgress,
+    },
+    {
+      id: 'listening',
+      title: 'Listening Comprehension',
+      subtitle: 'Nghe & Làm bài tập Quiz',
+      metricLabel: 'High Score',
+      metricValue: listeningScore !== null ? `${listeningScore}/100` : 'Chưa có điểm',
+    },
+    {
+      id: 'dictation',
+      title: 'Dictation',
+      subtitle: 'Luyện nghe & Chép chính tả',
+      metricLabel: 'Completed',
+      metricValue:
+        totalSegments > 0 ? `${dictationCompleted}/${totalSegments} Sentences` : 'Chưa có dữ liệu',
+    },
+  ]
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-primary/30 border-t-accent-primary mx-auto" />
+          <p className="text-text-secondary">Đang tải dữ liệu video...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !video) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-red-400">{error || 'Không tìm thấy video'}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 rounded-lg bg-accent-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-primary/90"
+          >
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 px-20 text-text-primary">
       {/* Current Video Section */}
       <div className="space-y-6">
         <div className="w-full">
@@ -65,86 +240,99 @@ const VideoDashboard = () => {
             className="relative w-full overflow-hidden rounded-2xl border border-border-primary shadow-chill-lg bg-bg-secondary transition-chill hover:shadow-chill-dark"
             style={{ aspectRatio: '16/9' }}
           >
-            <img
-              src={videoStats.cover}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
+            <iframe
+              src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1`}
+              title={video.title || 'YouTube video player'}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="h-full w-full"
             />
           </div>
         </div>
 
         {/* Title */}
-        <h1
-          ref={titleRef}
-          tabIndex={-1}
-          className="typo-title text-text-primary outline-none"
-        >
-          {videoStats.title}
+        <h1 ref={titleRef} tabIndex={-1} className="typo-title text-text-primary outline-none">
+          {video.title || 'Untitled Video'}
         </h1>
 
-        {/* Description */}
-        <p className="typo-body text-text-secondary">
-          AI đã phân tích transcript của video này và tạo lộ trình học phù hợp. Hãy chọn một chế độ bên dưới để tiếp tục nhé.
-        </p>
-
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary transition-chill hover:bg-interactive-hover">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>12 phút</span>
+        {video.duration_seconds && (
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary transition-chill hover:bg-interactive-hover">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>{formatDuration(video.duration_seconds)}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-secondary px-4 py-2.5 text-sm text-text-secondary transition-chill hover:bg-interactive-hover">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <span>Personalized by AI</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">TOTAL VOCABULARY</p>
-          <p className="mt-3 text-4xl font-bold text-text-primary">{videoStats.totalVocabulary}</p>
+          {vocabularyCount > 0 ? (
+            <p className="mt-3 text-4xl font-bold text-text-primary">{vocabularyCount}</p>
+          ) : (
+            <p className="mt-3 text-lg font-medium text-text-tertiary">Chưa có từ vựng</p>
+          )}
         </div>
         <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">AI DIFFICULTY</p>
-          <p className="mt-3 text-2xl font-bold text-text-primary">{videoStats.difficulty}</p>
+          <p className="mt-3 text-2xl font-bold text-text-primary">
+            {formatDifficulty(video.difficulty_level)}
+          </p>
         </div>
       </div>
 
       {/* Mode Selection Section */}
-      <div className="space-y-4">
+      <div className="space-y-4 outline-none" ref={modeSectionRef} tabIndex={-1}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-text-tertiary">SELECT A MODE</p>
-          <p className="mt-2 text-base text-text-secondary">Chọn chế độ để tiếp tục phiên học của bạn.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-tertiary">SELECT A MODE</p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {modes.map((mode) => (
-              <button
+            <button
               key={mode.id}
+              data-mode-id={mode.id}
               onClick={() => handleModeClick(mode.id)}
-              className="group flex h-full flex-col rounded-lg border border-border-primary bg-bg-secondary p-5 text-left transition-chill hover-scale hover:border-border-accent hover:bg-interactive-hover hover:shadow-chill-md"
+              className={`group flex h-full flex-col rounded-lg border p-5 text-left transition-chill hover-scale hover:border-border-accent hover:bg-interactive-hover hover:shadow-chill-md ${
+                highlightedMode === mode.id
+                  ? 'border-accent-primary bg-interactive-hover shadow-chill-md scale-105'
+                  : 'border-border-primary bg-bg-secondary'
+              }`}
             >
               {/* Icon */}
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent-primary-light/20 text-accent-primary transition-chill group-hover:bg-accent-primary-light/30">
                 {mode.id === 'reading' && (
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
                   </svg>
                 )}
                 {mode.id === 'listening' && (
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                    />
                   </svg>
                 )}
                 {mode.id === 'dictation' && (
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
                   </svg>
                 )}
               </div>
@@ -162,9 +350,12 @@ const VideoDashboard = () => {
               </div>
 
               {/* Progress bar for reading mode */}
-              {mode.id === 'reading' && (
+              {mode.id === 'reading' && mode.progress !== undefined && (
                 <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-bg-tertiary">
-                  <div className="h-full rounded-full gradient-secondary transition-all duration-500" style={{ width: '75%' }} />
+                  <div
+                    className="h-full rounded-full gradient-secondary transition-all duration-500"
+                    style={{ width: `${mode.progress}%` }}
+                  />
                 </div>
               )}
             </button>

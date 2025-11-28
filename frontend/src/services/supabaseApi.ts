@@ -124,15 +124,29 @@ export const createStudySession = async (input: Partial<StudySessionRecord>) => 
   return data as StudySessionRecord
 }
 
-export const fetchRecentSessions = async () => {
+export type RecentSessionRecord = {
+  session_id: string
+  owner_id: string
+  status: string
+  reading_progress: number
+  listening_high_score: number | null
+  dictation_completed: number
+  last_opened_at: string
+  youtube_video_id: string
+  title: string
+  thumbnail_url: string | null
+  difficulty_level: string | null
+}
+
+export const fetchRecentSessions = async (limit = 20, offset = 0) => {
   const { data, error } = await supabase
     .from('recent_study_sessions')
     .select('*')
     .order('last_opened_at', { ascending: false })
-    .limit(20)
+    .range(offset, offset + limit - 1)
 
   if (error) throw error
-  return data
+  return data as RecentSessionRecord[]
 }
 
 export const fetchReadingSegments = async (videoId: string) => {
@@ -193,5 +207,37 @@ export const logFlashcardReview = async (vocabularyId: string, rating: 'again' |
 
   if (error) throw error
   return data
+}
+
+export const fetchVideoByYoutubeId = async (youtubeVideoId: string) => {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('youtube_video_id', youtubeVideoId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data as VideoRecord | null
+}
+
+export const fetchStudySessionByVideoId = async (videoId: string) => {
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .select('*')
+    .eq('video_id', videoId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data as StudySessionRecord | null
+}
+
+export const countVocabularyByVideo = async (videoId: string) => {
+  const { count, error } = await supabase
+    .from('vocabulary_items')
+    .select('*', { count: 'exact', head: true })
+    .eq('video_id', videoId)
+
+  if (error) throw error
+  return count ?? 0
 }
 

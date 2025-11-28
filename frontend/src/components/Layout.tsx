@@ -1,21 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import type { AuthUser } from '../services/supabaseApi'
-import { getCurrentUser, signInWithGoogle, signOut } from '../services/supabaseApi'
+import type { AuthUser, RecentSessionRecord } from '../services/supabaseApi'
+import { getCurrentUser, signInWithGoogle, signOut, fetchRecentSessions } from '../services/supabaseApi'
 import ThemeToggle from './ThemeToggle'
-
-const recentVideos = [
-  'How to Speak Fluent English in 30 Days',
-  '15 Advanced English Words for Everyday Use',
-  'Learn English Conversation: 10 Real-Life Scenarios',
-  'Master English Phrasal Verbs in Context',
-  'IELTS Speaking Test: Full Mock Exam',
-  'TOEFL Vocabulary Practice - 50 Must-Know Words',
-  'Business English - Professional Email Workshop',
-  'Travel English Phrases for Your Next Trip',
-  'English Pronunciation Practice - American Accent',
-]
 
 const DESKTOP_SIDEBAR_WIDTH = 260
 
@@ -26,6 +14,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading] = useState(true)
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
+  const [recentVideos, setRecentVideos] = useState<RecentSessionRecord[]>([])
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [offset, setOffset] = useState(0)
+  const loadMoreRef = useRef<HTMLLIElement | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -79,6 +72,98 @@ const Layout = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
+  const loadMoreVideos = useCallback(async () => {
+    if (!user || isLoadingVideos || !hasMore) return
+
+    try {
+      setIsLoadingVideos(true)
+      const sessions = await fetchRecentSessions(20, offset)
+      
+      if (sessions.length === 0) {
+        setHasMore(false)
+        return
+      }
+
+      setRecentVideos((prev) => [...prev, ...sessions])
+      setOffset((prev) => prev + sessions.length)
+      
+      // Nếu số lượng trả về ít hơn limit, không còn data nữa
+      if (sessions.length < 20) {
+        setHasMore(false)
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching recent videos', error)
+    } finally {
+      setIsLoadingVideos(false)
+    }
+  }, [user, isLoadingVideos, hasMore, offset])
+
+  useEffect(() => {
+    if (!user) {
+      setRecentVideos([])
+      setOffset(0)
+      setHasMore(true)
+      return
+    }
+
+    // Reset và load initial data
+    setRecentVideos([])
+    setOffset(0)
+    setHasMore(true)
+    
+    let isMounted = true
+
+    const loadInitialVideos = async () => {
+      try {
+        setIsLoadingVideos(true)
+        const sessions = await fetchRecentSessions(20, 0)
+        
+        if (isMounted) {
+          setRecentVideos(sessions)
+          setOffset(sessions.length)
+          
+          if (sessions.length < 20) {
+            setHasMore(false)
+          }
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching recent videos', error)
+      } finally {
+        if (isMounted) {
+          setIsLoadingVideos(false)
+        }
+      }
+    }
+
+    void loadInitialVideos()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore || isLoadingVideos) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoadingVideos) {
+          void loadMoreVideos()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [hasMore, isLoadingVideos, loadMoreVideos])
+
   const handleGoogleLogin = async () => {
     if (isLoginSubmitting) return
     try {
@@ -130,54 +215,96 @@ const Layout = ({ children }: { children: ReactNode }) => {
         >
           ×
         </button>
-        <div className="flex h-full flex-col overflow-y-auto pr-2">
-          <button
-            type="button"
-            onClick={() => {
-              navigate('/')
-              setIsSidebarOpen(false)
-            }}
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-base font-semibold text-text-primary"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-accent-primary text-2xl text-text-inverse">
-              ★
-            </div>
-          </button>
-
-          <div className="mt-10 space-y-2 text-base font-medium text-text-primary">
+        <div className="flex h-full flex-col pr-2">
+          {/* Fixed top section */}
+          <div className="flex-shrink-0">
             <button
-              className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover"
+              type="button"
               onClick={() => {
                 navigate('/')
-                setIsSidebarOpen(false)
+                if (!isDesktop) {
+                  setIsSidebarOpen(false)
+                }
               }}
-              type="button"
+              className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-base font-semibold text-text-primary"
             >
-              <span className="text-xl leading-none">＋</span>
-              New Study Session
+              <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-accent-primary text-2xl text-text-inverse">
+                ★
+              </div>
             </button>
-            <button className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover">
-              <span className="text-xl leading-none">💎</span>
-              Vocabulary Manager
-            </button>
-          </div>
 
-          <div className="mt-10 px-3 text-[10px] font-semibold tracking-[0.35em] text-text-tertiary">
-            RECENT VIDEOS
-          </div>
-
-          <ul className="mt-4 space-y-1">
-            {recentVideos.map((video) => (
-              <li
-                key={video}
-                className="flex cursor-pointer items-center rounded-2xl px-3 py-2.5 text-base text-text-secondary transition-colors hover:bg-interactive-hover hover:text-text-primary"
+            <div className="mt-10 space-y-2 text-base font-medium text-text-primary">
+              <button
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover"
+                onClick={() => {
+                  navigate('/')
+                  if (!isDesktop) {
+                    setIsSidebarOpen(false)
+                  }
+                }}
+                type="button"
               >
-                <span className="truncate">{video}</span>
-              </li>
-            ))}
-          </ul>
+                <span className="text-xl leading-none">＋</span>
+                New Study Session
+              </button>
+              <button className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover">
+                <span className="text-xl leading-none">💎</span>
+                Vocabulary Manager
+              </button>
+            </div>
 
-          <div className="mt-auto border-t border-border-divider pt-6 text-sm text-text-secondary">
+            <div className="mt-10 px-3 text-[10px] font-semibold tracking-[0.35em] text-text-tertiary">
+              RECENT VIDEOS
+            </div>
+          </div>
+
+          {/* Scrollable recent videos section */}
+          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
+            {recentVideos.length === 0 && !isLoadingVideos ? (
+              <div className="mt-4 px-3 text-sm text-text-tertiary">
+                Chưa có video nào
+              </div>
+            ) : (
+              <ul className="mt-4 space-y-1">
+                {recentVideos.map((session) => (
+                  <li
+                    key={session.session_id}
+                    className="flex cursor-pointer items-center rounded-2xl px-3 py-2.5 text-base text-text-secondary transition-colors hover:bg-interactive-hover hover:text-text-primary"
+                    onClick={() => {
+                      navigate(`/${session.youtube_video_id}/dash`)
+                      if (!isDesktop) {
+                        setIsSidebarOpen(false)
+                      }
+                    }}
+                  >
+                    <span className="truncate" title={session.title}>
+                      {session.title}
+                    </span>
+                  </li>
+                ))}
+                {/* Sentinel element for infinite scroll */}
+                {hasMore && (
+                  <li
+                    ref={loadMoreRef}
+                    className="flex items-center justify-center py-2"
+                  >
+                    {isLoadingVideos && (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-primary/30 border-t-accent-primary" />
+                    )}
+                  </li>
+                )}
+              </ul>
+            )}
+            {/* Initial loading state */}
+            {isLoadingVideos && recentVideos.length === 0 && (
+              <div className="mt-4 px-3">
+                <div className="h-4 w-full animate-pulse rounded bg-bg-tertiary" />
+              </div>
+            )}
+          </div>
+
+          {/* Fixed bottom section */}
+          <div className="flex-shrink-0 border-t border-border-divider pt-6 text-sm text-text-secondary">
             {showAppContent && (
               <button
                 type="button"
@@ -211,7 +338,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
           marginLeft: isDesktop ? (isSidebarOpen ? DESKTOP_SIDEBAR_WIDTH : 0) : 0,
         }}
       >
-        <header className="flex items-center justify-between pb-4">
+        <header 
+          className="fixed top-0 z-30 flex items-center justify-between border-b border-border-primary bg-bg-primary px-3 py-4 transition-[left,right] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:px-8 md:py-6" 
+          style={{ 
+            left: isDesktop ? (isSidebarOpen ? DESKTOP_SIDEBAR_WIDTH : 0) : 0,
+            right: 0
+          }}
+        >
           <button
             className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border-primary bg-bg-tertiary text-2xl text-text-primary"
             aria-label="Toggle navigation"
@@ -234,7 +367,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col">{children}</section>
+        <section className="flex flex-1 flex-col pt-20">{children}</section>
 
         {!showAppContent && !isAuthLoading && (
           <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">

@@ -80,12 +80,16 @@ Fill in the missing values:
 ### 5. Edge Function: `fetch-youtube-caption`
 
 - Source: `supabase/functions/fetch-youtube-caption/index.ts`
-- Purpose: Calls RapidAPI YouTube Transcriptor API to retrieve video transcripts, then:
-  - Upserts the video metadata into `videos`
-  - Rebuilds `reading_segments` for that video (using RapidAPI timestamps)
+- Purpose: Retrieves video transcripts using **multiple RapidAPI providers** with automatic fallback:
+  - **Provider 1**: `youtube-transcriptor.p.rapidapi.com/transcript`
+  - **Provider 2**: `youtube-v2.p.rapidapi.com/video/subtitles`
+  - Each request randomly selects a primary provider; if it fails, automatically falls back to the other provider
+  - Normalizes responses from both providers to a common format (handles HTML entity decoding, timestamp mapping)
+  - Upserts the video metadata into `videos` (includes `provider_used` in transcript JSONB)
+  - Rebuilds `reading_segments` for that video (using normalized timestamps)
   - Upserts/creates a `study_session` with status `ready`
-  - Returns `{ transcript, language, videoUuid, sessionId, youtubeVideoId }` for the frontend UI.
-- Error handling: If the video lacks captions, the function responds with HTTP 404 and `{"error":"Video này không có caption"}` so the frontend can translate the message directly to the UI.
+  - Returns `{ transcript, language, videoUuid, sessionId, youtubeVideoId, providerUsed }` for the frontend UI.
+- Error handling: If both providers fail or the video lacks captions, the function responds with HTTP 404 and `{"error":"Video này không có caption"}`. Logs are included for debugging which provider was attempted.
 - Deployment:
   ```bash
   cd /Users/nbtrong/Documents/self-learn
