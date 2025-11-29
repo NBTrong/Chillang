@@ -167,9 +167,14 @@ export const fetchListeningQuiz = async (sessionId: string) => {
     .eq('session_id', sessionId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (quizError) throw quizError
+
+  // If no quiz found, return null
+  if (!quiz) {
+    return null
+  }
 
   const { data: questions, error: questionsError } = await supabase
     .from('listening_quiz_questions')
@@ -178,7 +183,7 @@ export const fetchListeningQuiz = async (sessionId: string) => {
     .order('created_at', { ascending: true })
 
   if (questionsError) throw questionsError
-  return { quiz: quiz as ListeningQuiz, questions: questions as ListeningQuizQuestion[] }
+  return { quiz: quiz as ListeningQuiz, questions: (questions || []) as ListeningQuizQuestion[] }
 }
 
 export const fetchDictationPrompts = async (sessionId: string) => {
@@ -229,6 +234,17 @@ export const fetchStudySessionByVideoId = async (videoId: string) => {
 
   if (error) throw error
   return data as StudySessionRecord | null
+}
+
+export const fetchVocabularyByVideoId = async (videoId: string) => {
+  const { data, error } = await supabase
+    .from('vocabulary_items')
+    .select('*')
+    .eq('video_id', videoId)
+    .order('word', { ascending: true })
+
+  if (error) throw error
+  return data as VocabularyItem[]
 }
 
 export const countVocabularyByVideo = async (videoId: string) => {

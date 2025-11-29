@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchVideoByYoutubeId, type VideoRecord } from '../services/supabaseApi'
+import {
+  fetchVideoByYoutubeId,
+  fetchReadingSegments,
+  fetchVocabularyByVideoId,
+  type VideoRecord,
+  type ReadingSegment,
+  type VocabularyItem,
+} from '../services/supabaseApi'
 
 type DictionaryEntry = {
   word: string
@@ -10,21 +17,20 @@ type DictionaryEntry = {
   example: string
 }
 
-const dictionaryEntries: Record<string, DictionaryEntry> = {
-  innovation: {
-    word: 'innovation',
-    pronunciation: '/In.ə\'veI.ʃən/',
-    partOfSpeech: 'Noun',
-    definition: 'A new method, idea, product, etc.',
-    example: 'The company is known for its constant innovation in product design.',
-  },
-  integrated: {
-    word: 'integrated',
-    pronunciation: '/ˈɪn.tə.ɡreɪ.tɪd/',
-    partOfSpeech: 'Adjective',
-    definition: 'Combined or coordinated into a functioning whole.',
-    example: 'The new system is fully integrated with existing software.',
-  },
+// Helper function to convert vocabulary items to dictionary entries
+const vocabularyToDictionary = (vocabItems: VocabularyItem[]): Record<string, DictionaryEntry> => {
+  const entries: Record<string, DictionaryEntry> = {}
+  vocabItems.forEach((item) => {
+    const normalized = item.word.toLowerCase().replace(/[^a-z]/g, '')
+    entries[normalized] = {
+      word: item.word,
+      pronunciation: item.ipa || '',
+      partOfSpeech: 'Word', // Default since schema doesn't have partOfSpeech
+      definition: item.definition || item.translation || 'No definition available.',
+      example: item.context_sentence || '',
+    }
+  })
+  return entries
 }
 
 const ReadingScreen = () => {
@@ -32,21 +38,50 @@ const ReadingScreen = () => {
   const navigate = useNavigate()
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [video, setVideo] = useState<VideoRecord | null>(null)
+  const [readingSegments, setReadingSegments] = useState<ReadingSegment[]>([])
+  const [vocabularyItems, setVocabularyItems] = useState<VocabularyItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => {
-    if (!videoId) return
+    if (!videoId) {
+      setError('Video ID không hợp lệ')
+      setIsLoading(false)
+      return
+    }
 
-    const loadVideo = async () => {
+    const loadData = async () => {
       try {
+        setIsLoading(true)
+        setError(null)
+
+        // Fetch video
         const videoData = await fetchVideoByYoutubeId(videoId)
+        if (!videoData) {
+          setError('Không tìm thấy video')
+          setIsLoading(false)
+          return
+        }
         setVideo(videoData)
-      } catch (error) {
-        console.error('Failed to load video data', error)
+
+        // Fetch reading segments and vocabulary in parallel
+        const [segments, vocabulary] = await Promise.all([
+          fetchReadingSegments(videoData.id).catch(() => [] as ReadingSegment[]),
+          fetchVocabularyByVideoId(videoData.id).catch(() => [] as VocabularyItem[]),
+        ])
+
+        setReadingSegments(segments)
+        setVocabularyItems(vocabulary)
+      } catch (err) {
+        console.error('Failed to load data', err)
+        setError('Không thể tải dữ liệu')
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    loadVideo()
+    loadData()
   }, [videoId])
 
   // Đóng popup khi click ra ngoài
@@ -107,6 +142,8 @@ const ReadingScreen = () => {
     console.log('Bookmark word:', selectedWord)
   }
 
+  // Convert vocabulary items to dictionary entries
+  const dictionaryEntries = vocabularyToDictionary(vocabularyItems)
   const selectedEntry = selectedWord ? dictionaryEntries[selectedWord] : null
 
   // Tokenize text to identify words
@@ -162,6 +199,33 @@ const ReadingScreen = () => {
 
   const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-primary/30 border-t-accent-primary mx-auto" />
+          <p className="text-text-secondary">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !video) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-error mb-4">{error || 'Không tìm thấy video'}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
+          >
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-1 flex-col text-text-primary">
       {/* Content Container - dùng padding mặc định của Layout */}
@@ -190,36 +254,31 @@ const ReadingScreen = () => {
         {/* Main Content */}
         {/* Title */}
         <h1 className="typo-title text-center mb-16 leading-tight text-text-primary" style={{ fontSize: 'clamp(2rem, 1.8rem + 1vw, 2.8rem)' }}>
-          How AI is changing the future of creativity
+          {video.title || 'Reading Comprehension'}
         </h1>
 
         {/* Paragraphs */}
-        <div className="space-y-10">
-          {/* Paragraph 1 */}
-          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
-            Welcome to our deep dive into the evolving world of artificial intelligence. In this session, we'll explore the
-            groundbreaking ways AI is reshaping creative industries, from art and music to writing and design. We'll start by
-            looking at the history of AI in creative fields, tracing its roots from early experiments to the sophisticated
-            tools we have today.
+        {readingSegments.length === 0 ? (
+          <div className="rounded-xl border border-border-primary bg-bg-secondary p-8 text-center">
+            <p className="typo-body text-text-secondary">
+              Chưa có nội dung đọc cho video này. Vui lòng tạo reading segments trước.
+            </p>
+          </div>
+        ) : (
+          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '2.0', textIndent: '2em' }}>
+            {readingSegments.map((segment, index) => {
+              const text = segment.original_text
+              // Thêm khoảng trắng giữa các segments nếu cần
+              const needsSpace = index > 0 && !text.startsWith(' ') && !text.startsWith('\n')
+              return (
+                <span key={segment.id || index}>
+                  {needsSpace && ' '}
+                  {renderTextWithHighlights(text)}
+                </span>
+              )
+            })}
           </p>
-
-          {/* Paragraph 2 */}
-          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
-            Next, we'll discuss the current landscape. You'll see demonstrations of AI-powered tools that can generate
-            stunning visuals, compose original music, and even write compelling narratives. We'll analyze the technology
-            behind these tools and discuss their capabilities and limitations. Are they just mimicking human creativity, or
-            are they capable of genuine {renderTextWithHighlights('innovation')}? We'll hear from experts and artists who are
-            using these tools in their daily work.
-          </p>
-
-          {/* Paragraph 3 */}
-          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
-            Finally, we will look to the future. What are the ethical considerations we need to address as AI becomes more{' '}
-            {renderTextWithHighlights('integrated')} into our creative processes? How will it impact jobs and the very
-            definition of what it means to be an artist? Join us as we navigate these exciting and challenging questions,
-            uncovering the incredible potential of AI to augment and expand human creativity.
-          </p>
-        </div>
+        )}
       </div>
 
       {/* Dictionary Definition Box */}
