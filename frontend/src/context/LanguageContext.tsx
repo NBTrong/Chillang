@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { Language, TranslationKey } from '../i18n/types'
 import { defaultLanguage, detectBrowserLanguage, getTranslation, supportedLanguages } from '../i18n'
 import { getUserProfile, updateUserLanguage } from '../services/supabaseApi'
-import { getCurrentUser } from '../services/supabaseApi'
+import { supabase } from '../lib/supabaseClient'
 
 type LanguageContextType = {
   language: Language
@@ -65,11 +65,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       if (storedLang) {
         finalLanguage = storedLang
         // Sync to database if user is logged in (but don't override localStorage)
+        // Use getSession() instead of getCurrentUser() to avoid API call
         try {
-          const user = await getCurrentUser()
-          if (user) {
+          const { data: session } = await supabase.auth.getSession()
+          if (session?.session?.user) {
             // Update database to match localStorage (silent update, don't wait)
-            updateUserLanguage(storedLang).catch(() => {
+            updateUserLanguage(storedLang, session.session.user.id).catch(() => {
               // Ignore errors - localStorage is the source of truth
             })
           }
@@ -78,10 +79,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         // If no localStorage, check user profile from database
+        // Use getSession() instead of getCurrentUser() to avoid API call
         try {
-          const user = await getCurrentUser()
-          if (user) {
-            const profile = await getUserProfile()
+          const { data: session } = await supabase.auth.getSession()
+          if (session?.session?.user) {
+            const profile = await getUserProfile(session.session.user.id)
             if (profile?.language && supportedLanguages.includes(profile.language as Language)) {
               finalLanguage = profile.language as Language
               // Sync to localStorage
@@ -122,10 +124,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setStoredLanguage(lang)
     
     // Also save to user profile if user is logged in
+    // Use getSession() instead of getCurrentUser() to avoid API call
     try {
-      const user = await getCurrentUser()
-      if (user) {
-        await updateUserLanguage(lang)
+      const { data: session } = await supabase.auth.getSession()
+      if (session?.session?.user) {
+        await updateUserLanguage(lang, session.session.user.id)
       }
     } catch (error) {
       console.error('Failed to save language preference to user profile:', error)

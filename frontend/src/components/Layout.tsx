@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import type { AuthUser, RecentSessionRecord } from '../services/supabaseApi'
-import { getCurrentUser, signInWithGoogle, signOut, fetchRecentSessions } from '../services/supabaseApi'
+import { getCurrentUser, signInWithGoogle, signOut, fetchRecentSessions, getUserAvatarUrl } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
@@ -47,11 +47,23 @@ const Layout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let isMounted = true
 
+    // Use getSession() first (faster, from cache) instead of getUser() (makes API call)
     const initAuth = async () => {
       try {
-        const currentUser = await getCurrentUser()
-        if (isMounted) {
-          setUser(currentUser)
+        // Try to get session from cache first (no API call)
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (isMounted && sessionData?.session?.user) {
+          setUser(sessionData.session.user as AuthUser)
+          setIsAuthLoading(false)
+          return
+        }
+        
+        // Only call getUser() if no session in cache (rare case)
+        if (!sessionData?.session) {
+          const currentUser = await getCurrentUser()
+          if (isMounted) {
+            setUser(currentUser)
+          }
         }
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -65,6 +77,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser((session?.user as AuthUser) ?? null)
+      setIsAuthLoading(false)
     })
 
     void initAuth()
@@ -80,7 +93,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsLoadingVideos(true)
-      const sessions = await fetchRecentSessions(20, offset)
+      const sessions = await fetchRecentSessions(20, offset, user.id)
       
       if (sessions.length === 0) {
         setHasMore(false)
@@ -120,7 +133,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     const loadInitialVideos = async () => {
       try {
         setIsLoadingVideos(true)
-        const sessions = await fetchRecentSessions(20, 0)
+        const sessions = await fetchRecentSessions(20, 0, user.id)
         
         if (isMounted) {
           setRecentVideos(sessions)
@@ -197,6 +210,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     'Learner'
 
   const userInitial = userDisplayName?.charAt(0)?.toUpperCase() ?? 'U'
+  const userAvatarUrl = getUserAvatarUrl(user)
 
   const showAppContent = !!user
 
@@ -317,9 +331,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 onClick={() => setIsUserSettingsOpen(true)}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left hover:bg-interactive-hover"
               >
-                <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-bg-tertiary text-sm font-semibold text-text-inverse">
-                  <span aria-hidden>{userInitial}</span>
-                </div>
+                {userAvatarUrl ? (
+                  <img
+                    src={userAvatarUrl}
+                    alt={userDisplayName}
+                    className="h-9 w-9 flex-none rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-bg-tertiary text-sm font-semibold text-text-inverse">
+                    <span aria-hidden>{userInitial}</span>
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-text-primary">{userDisplayName}</div>
                 </div>
@@ -440,9 +462,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <div>
                   <div className="text-sm font-semibold text-text-secondary">{t('layout.account')}</div>
                   <div className="mt-4 flex items-center gap-3">
-                    <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-bg-tertiary text-sm font-semibold text-text-inverse">
-                      <span aria-hidden>{userInitial}</span>
-                    </div>
+                    {userAvatarUrl ? (
+                      <img
+                        src={userAvatarUrl}
+                        alt={userDisplayName}
+                        className="h-9 w-9 flex-none rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-bg-tertiary text-sm font-semibold text-text-inverse">
+                        <span aria-hidden>{userInitial}</span>
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-text-primary">{userDisplayName}</div>
                       {user?.email && (

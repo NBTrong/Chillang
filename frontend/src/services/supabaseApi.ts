@@ -85,6 +85,14 @@ export type VocabularyItem = {
 
 export type AuthUser = Pick<User, 'id' | 'email' | 'user_metadata'>
 
+/**
+ * Get user avatar URL from user metadata (Google OAuth provides avatar_url or picture)
+ */
+export const getUserAvatarUrl = (user: AuthUser | null): string | null => {
+  if (!user?.user_metadata) return null
+  return user.user_metadata.avatar_url || user.user_metadata.picture || null
+}
+
 export const getCurrentUser = async () => {
   const { data, error } = await supabase.auth.getUser()
   if (error) throw error
@@ -138,10 +146,21 @@ export type RecentSessionRecord = {
   difficulty_level: string | null
 }
 
-export const fetchRecentSessions = async (limit = 20, offset = 0) => {
+export const fetchRecentSessions = async (limit = 20, offset = 0, userId?: string) => {
+  // Use provided userId or get from session (faster than getUser())
+  let ownerId = userId
+  if (!ownerId) {
+    const { data: session } = await supabase.auth.getSession()
+    if (!session?.session?.user) {
+      return []
+    }
+    ownerId = session.session.user.id
+  }
+
   const { data, error } = await supabase
     .from('recent_study_sessions')
     .select('*')
+    .eq('owner_id', ownerId)
     .order('last_opened_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -289,31 +308,41 @@ export type UserProfile = {
   updated_at: string
 }
 
-export const getUserProfile = async (): Promise<UserProfile | null> => {
-  const { data: user } = await supabase.auth.getUser()
-  if (!user.user) return null
+export const getUserProfile = async (userId?: string): Promise<UserProfile | null> => {
+  // Use provided userId or get from session (faster than getUser())
+  let ownerId = userId
+  if (!ownerId) {
+    const { data: session } = await supabase.auth.getSession()
+    if (!session?.session?.user) return null
+    ownerId = session.session.user.id
+  }
 
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', user.user.id)
+    .eq('id', ownerId)
     .maybeSingle()
 
   if (error) throw error
   return data as UserProfile | null
 }
 
-export const updateUserLanguage = async (language: 'vi' | 'en'): Promise<UserProfile> => {
-  const { data: user } = await supabase.auth.getUser()
-  if (!user.user) {
-    throw new Error('User not authenticated')
+export const updateUserLanguage = async (language: 'vi' | 'en', userId?: string): Promise<UserProfile> => {
+  // Use provided userId or get from session (faster than getUser())
+  let ownerId = userId
+  if (!ownerId) {
+    const { data: session } = await supabase.auth.getSession()
+    if (!session?.session?.user) {
+      throw new Error('User not authenticated')
+    }
+    ownerId = session.session.user.id
   }
 
   const { data, error } = await supabase
     .from('user_profiles')
     .upsert(
       {
-        id: user.user.id,
+        id: ownerId,
         language,
       },
       { onConflict: 'id' }
