@@ -333,13 +333,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
       )}
 
       <main
-        className="flex flex-1 flex-col px-3 py-4 transition-[margin-left] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:px-8 md:py-6"
+        className="flex flex-1 flex-col transition-[margin-left] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{
           marginLeft: isDesktop ? (isSidebarOpen ? DESKTOP_SIDEBAR_WIDTH : 0) : 0,
         }}
       >
         <header 
-          className="fixed top-0 z-30 flex items-center justify-between border-b border-border-primary bg-bg-primary px-3 py-4 transition-[left,right] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:px-8 md:py-6" 
+          className="fixed top-0 z-30 flex items-center justify-between border-b border-border-primary bg-bg-primary px-4 py-4 transition-[left,right] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:px-8 md:py-6" 
           style={{ 
             left: isDesktop ? (isSidebarOpen ? DESKTOP_SIDEBAR_WIDTH : 0) : 0,
             right: 0
@@ -367,7 +367,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col pt-20">{children}</section>
+        <section className="flex flex-1 flex-col px-40 pb-10 pt-20 md:px-40 md:pt-28">
+          {children}
+        </section>
 
         {!showAppContent && !isAuthLoading && (
           <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">

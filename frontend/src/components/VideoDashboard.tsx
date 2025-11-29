@@ -232,7 +232,7 @@ const VideoDashboard = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-20 text-text-primary">
+    <div className="flex flex-1 flex-col gap-6 text-text-primary">
       {/* Current Video Section */}
       <div className="space-y-6">
         <div className="w-full">
