@@ -53,7 +53,6 @@ const getInitialLanguage = (): Language => {
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // Initialize with localStorage value immediately (synchronous) to avoid flash
   const [language, setLanguageState] = useState<Language>(getInitialLanguage())
-  const [isInitialized, setIsInitialized] = useState(false)
 
   // Initialize language from localStorage, user profile, or browser
   useEffect(() => {
@@ -106,7 +105,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       if (finalLanguage && finalLanguage !== language) {
         setLanguageState(finalLanguage)
       }
-      setIsInitialized(true)
     }
 
     void initLanguage()

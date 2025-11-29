@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 type ResolvedTheme = 'light' | 'dark'
@@ -15,7 +15,7 @@ const THEME_STORAGE_KEY = 'tube-study-theme'
 
 // Function to get system preference
 const getSystemTheme = (): ResolvedTheme => {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
@@ -43,9 +43,9 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'dark'
+    if (typeof window === 'undefined') return 'light'
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null
-    return stored || 'dark' // Default to dark mode
+    return stored || 'light' // Default to light mode
   })
 
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => 

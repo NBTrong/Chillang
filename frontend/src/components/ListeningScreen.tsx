@@ -67,7 +67,7 @@ const ListeningScreen = () => {
   const { t } = useTranslation()
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
-  const [autoScroll, setAutoScroll] = useState(true)
+  const [autoScroll] = useState(true)
   const [showTranscript, setShowTranscript] = useState(true)
   
   // Data states
