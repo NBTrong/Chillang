@@ -678,7 +678,7 @@ const DictationScreen = () => {
               <iframe
                 id="youtube-player-dictation"
                 ref={youtubeIframeRef}
-                src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1&enablejsapi=1&autoplay=0`}
+                src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1&enablejsapi=1&autoplay=0&controls=0&disablekb=1`}
                 title={video.title || 'YouTube video player'}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
@@ -694,7 +694,7 @@ const DictationScreen = () => {
             <div className="flex items-center justify-between typo-body-sm text-text-secondary">
               <span className="font-medium">{t('dictation.question')} {currentPromptIndex + 1}/{totalPrompts}</span>
               <span className="text-xs text-text-tertiary">
-                Cmd+Shift: {t('dictation.replay')} • Enter: {t('dictation.checkAnswer')}/{t('dictation.nextQuestion')}
+                Cmd+Shift: {t('dictation.replay')} • Enter: {t('dictation.checkAnswer')}
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-bg-tertiary">
@@ -725,7 +725,7 @@ const DictationScreen = () => {
                 onKeyDown={handleTextareaKeyDown}
                 placeholder={t('dictation.inputPlaceholder')}
                 disabled={showFeedback && isAnswerChecked && isCorrect && !isLastPrompt}
-                className="w-full resize-none bg-transparent typo-body text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
+                className="w-full resize-none bg-transparent typo-subtitle text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
                 rows={4}
               />
               
@@ -807,13 +807,13 @@ const DictationScreen = () => {
                   )}
                 </div>
               )}
-              {!feedback.isFullyCorrect && (
+              {/* {!feedback.isFullyCorrect && (
                 <div className="rounded-lg border border-error/30 bg-error/5 p-3 mb-3">
                   <p className="typo-body-sm font-semibold text-error">
                     {t('dictation.incorrect')}
                   </p>
                 </div>
-              )}
+              )} */}
               <div className="space-y-2">
                 <p className="typo-body-sm text-text-secondary">{t('dictation.yourAnswer')}</p>
                 <p className="typo-body text-text-primary">
