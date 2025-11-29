@@ -269,3 +269,16 @@ export const updateStudySession = async (sessionId: string, updates: Partial<Stu
   return data as StudySessionRecord
 }
 
+export const generateMoreQuestions = async (sessionId: string) => {
+  const { data, error } = await supabase.functions.invoke<{
+    success: boolean
+    questionsAdded: number
+    totalQuestions: number
+  }>('generate-more-questions', {
+    body: { sessionId },
+  })
+
+  if (error) throw error
+  return data
+}
+

@@ -6,6 +6,7 @@ import {
   fetchListeningQuiz,
   fetchReadingSegments,
   updateStudySession,
+  generateMoreQuestions,
   type VideoRecord,
   type StudySessionRecord,
   type ListeningQuizQuestion,
@@ -44,6 +45,7 @@ declare global {
     class Player {
       constructor(id: string | HTMLElement, options?: PlayerOptions)
       getCurrentTime(): number
+      seekTo(seconds: number, allowSeekAhead?: boolean): void
       destroy(): void
     }
 
@@ -78,6 +80,7 @@ const ListeningScreen = () => {
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [score, setScore] = useState<number | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
   
   // Refs for height synchronization
   const videoContainerRef = useRef<HTMLDivElement>(null)
@@ -547,6 +550,20 @@ const ListeningScreen = () => {
     }))
   }
 
+  // Handle transcript segment click - seek video to that time
+  const handleSegmentClick = (startMs: number | null) => {
+    if (!startMs || !youtubePlayerRef.current || !isPlayerReady) {
+      return
+    }
+
+    try {
+      const seconds = startMs / 1000
+      youtubePlayerRef.current.seekTo(seconds, true)
+    } catch (error) {
+      console.error('Failed to seek video:', error)
+    }
+  }
+
   // Handle quiz submission
   const handleSubmit = async () => {
     if (isSubmitted) return
@@ -579,6 +596,33 @@ const ListeningScreen = () => {
       } catch (err) {
         console.error('Failed to update high score:', err)
       }
+    }
+  }
+
+  // Handle generate more questions
+  const handleGenerateMore = async () => {
+    if (!session || isGenerating) return
+
+    try {
+      setIsGenerating(true)
+      const result = await generateMoreQuestions(session.id)
+      
+      if (result?.success) {
+        // Reload quiz to get new questions
+        const quizData = await fetchListeningQuiz(session.id)
+        if (quizData) {
+          const { questions: dbQuestions } = quizData
+          const transformedQuestions = dbQuestions.map((q) => transformQuestion(q))
+          setQuestions(transformedQuestions)
+          // Reset user answers for new questions
+          setUserAnswers({})
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate more questions:', err)
+      alert('Không thể tạo thêm câu hỏi. Vui lòng thử lại.')
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -682,18 +726,6 @@ const ListeningScreen = () => {
             ref={transcriptContainerRef}
             className="flex flex-col transition-chill relative rounded-xl"
           >
-            <div className="mb-4 flex items-center justify-between flex-shrink-0">
-              <h3 className="typo-subtitle text-text-primary">Transcript</h3>
-              <label className="flex items-center gap-2 typo-body-sm text-text-secondary">
-                <input
-                  type="checkbox"
-                  checked={autoScroll}
-                  onChange={(e) => setAutoScroll(e.target.checked)}
-                  className="h-4 w-4 rounded border-border-primary bg-bg-secondary text-accent-primary"
-                />
-                Auto-scroll
-              </label>
-            </div>
             <div 
               ref={transcriptScrollRef}
               className="flex-1 space-y-2 overflow-y-auto typo-body min-h-0 transition-all duration-300 rounded-lg"
@@ -701,12 +733,13 @@ const ListeningScreen = () => {
               {transcriptEntries.map((entry, index) => (
                 <div
                   key={index}
-                  className={`rounded-lg p-3 transition-all duration-200 ease-in-out ${
+                  onClick={() => handleSegmentClick(entry.startMs)}
+                  className={`rounded-lg p-3 transition-all duration-200 ease-in-out cursor-pointer ${
                     !showTranscript ? 'blur-md select-none pointer-events-none' : ''
                   } ${
                     entry.highlighted
                       ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
-                      : 'border border-transparent bg-bg-tertiary text-text-secondary'
+                      : 'border border-transparent bg-bg-tertiary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
                   }`}
                   style={{
                     transitionProperty: 'background-color, border-color, color, box-shadow, filter',
@@ -753,6 +786,19 @@ const ListeningScreen = () => {
               Try Again
             </button>
           )}
+          {!isSubmitted && (
+            <button
+              onClick={handleGenerateMore}
+              disabled={isGenerating}
+              className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGenerating 
+                ? 'Generating...' 
+                : questions.length === 0 
+                  ? 'Generate Questions' 
+                  : 'Generate More Questions'}
+            </button>
+          )}
           <button
             onClick={() => setShowTranscript(!showTranscript)}
             className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
@@ -764,8 +810,11 @@ const ListeningScreen = () => {
         {/* Questions Section */}
         {questions.length === 0 ? (
           <div className="rounded-xl border border-border-primary bg-bg-secondary p-8 text-center">
-            <p className="typo-body text-text-secondary">
-              Chưa có câu hỏi cho video này. Vui lòng tạo quiz trước.
+            <p className="typo-body text-text-secondary mb-4">
+              Chưa có câu hỏi cho video này.
+            </p>
+            <p className="typo-body-sm text-text-tertiary">
+              Nhấn nút "Generate Questions" ở trên để tạo câu hỏi.
             </p>
           </div>
         ) : (

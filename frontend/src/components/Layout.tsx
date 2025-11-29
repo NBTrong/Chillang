@@ -367,7 +367,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col px-40 pb-10 pt-20 md:px-40 md:pt-28">
+        <section className="flex flex-1 flex-col px-20 pb-10 pt-20 md:px-20 md:pt-28">
           {children}
         </section>
 

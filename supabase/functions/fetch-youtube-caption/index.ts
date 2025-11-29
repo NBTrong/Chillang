@@ -474,6 +474,169 @@ Respond with just the level (e.g., "B1" or "C2"):`
   }
 }
 
+type ListeningQuizQuestionInput = {
+  prompt: string
+  correct_option: string
+  distractors: string[]
+  hint: string | null
+  reference_start_ms: number | null
+  reference_end_ms: number | null
+  explanation: string | null
+}
+
+const generateListeningQuizWithGemini = async (
+  transcript: string,
+  segments: Array<{ subtitle: string; start: number; dur: number }>,
+  apiKey: string,
+): Promise<ListeningQuizQuestionInput[]> => {
+  if (!transcript || transcript.trim().length === 0 || segments.length === 0) {
+    return []
+  }
+
+  const transcriptSample = transcript.slice(0, 10000)
+  
+  // Create a map of text to timestamps for reference
+  const segmentMap = segments.map((seg) => ({
+    text: seg.subtitle,
+    startMs: Math.round(seg.start * 1000),
+    endMs: Math.round((seg.start + seg.dur) * 1000),
+  }))
+
+  const prompt = `Generate listening comprehension quiz questions from the following English transcript. Create 8-12 multiple-choice questions that test understanding of:
+- Main ideas and key points
+- Specific details mentioned
+- Inferences and implications
+- Speaker's attitude or purpose
+
+Transcript:
+${transcriptSample}
+
+Return a JSON array of objects, each with:
+- "prompt": the question text
+- "correct_option": the correct answer (exact text)
+- "distractors": array of 3 incorrect but plausible answer options
+- "hint": a brief hint that guides the listener (optional, can be null)
+- "reference_text": a short quote from the transcript that contains the answer (for finding timestamp)
+- "explanation": a brief explanation of why the correct answer is right (optional, can be null)
+
+Important:
+- Questions should be answerable by listening carefully to the content
+- Distractors should be plausible but clearly wrong
+- Reference text should be an exact quote from the transcript to help locate the timestamp
+- Return ONLY valid JSON array, no other text
+
+Example format:
+[
+  {
+    "prompt": "What is the main topic discussed in the video?",
+    "correct_option": "The importance of effective communication",
+    "distractors": ["How to learn a new language", "Tips for public speaking", "The history of communication"],
+    "hint": "Listen for the central theme mentioned at the beginning",
+    "reference_text": "The importance of effective communication",
+    "explanation": "The speaker emphasizes this as the main focus throughout the video"
+  }
+]`
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      console.error('Gemini API error for quiz generation:', response.status, await response.text())
+      return []
+    }
+
+    const data = (await response.json()) as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string
+          }>
+        }
+      }>
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+
+    // Try to extract JSON from response (might have markdown code blocks)
+    const jsonMatch = text.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      try {
+        const questions = JSON.parse(jsonMatch[0]) as Array<{
+          prompt?: string
+          correct_option?: string
+          distractors?: string[]
+          hint?: string | null
+          reference_text?: string
+          explanation?: string | null
+        }>
+
+        // Process questions and find timestamps
+        const processedQuestions: ListeningQuizQuestionInput[] = []
+
+        for (const q of questions) {
+          if (!q.prompt || !q.correct_option || !q.distractors || q.distractors.length < 3) {
+            continue
+          }
+
+          // Find timestamp for reference text
+          let referenceStartMs: number | null = null
+          let referenceEndMs: number | null = null
+
+          if (q.reference_text) {
+            // Try to find the segment containing this text
+            const referenceLower = q.reference_text.toLowerCase().trim()
+            for (const seg of segmentMap) {
+              if (seg.text.toLowerCase().includes(referenceLower) || referenceLower.includes(seg.text.toLowerCase())) {
+                referenceStartMs = seg.startMs
+                referenceEndMs = seg.endMs
+                break
+              }
+            }
+          }
+
+          processedQuestions.push({
+            prompt: q.prompt.trim(),
+            correct_option: q.correct_option.trim(),
+            distractors: q.distractors.slice(0, 3).map((d) => d.trim()),
+            hint: q.hint?.trim() || null,
+            reference_start_ms: referenceStartMs,
+            reference_end_ms: referenceEndMs,
+            explanation: q.explanation?.trim() || null,
+          })
+        }
+
+        return processedQuestions
+      } catch (parseError) {
+        console.warn('Failed to parse quiz JSON:', parseError)
+      }
+    }
+
+    return []
+  } catch (error) {
+    console.error('Failed to generate listening quiz with Gemini:', error)
+    return []
+  }
+}
+
 const chunkArray = <T,>(items: T[], size: number) => {
   const chunks: T[][] = []
   for (let i = 0; i < items.length; i += size) {
@@ -681,6 +844,82 @@ serve(async (request) => {
           console.error('Failed to insert vocabulary chunk', vocabError)
           // Don't throw, just log - vocabulary extraction is optional
         }
+      }
+    }
+
+    // Generate and insert listening quiz
+    if (geminiApiKey && result.segments.length > 0) {
+      try {
+        const quizQuestions = await generateListeningQuizWithGemini(
+          result.transcript,
+          result.segments,
+          geminiApiKey,
+        )
+
+        if (quizQuestions.length > 0) {
+          // Delete existing quiz for this session
+          const { data: existingQuiz } = await supabaseAdmin
+            .from('listening_quizzes')
+            .select('id')
+            .eq('session_id', sessionId)
+            .maybeSingle()
+
+          if (existingQuiz) {
+            await supabaseAdmin
+              .from('listening_quiz_questions')
+              .delete()
+              .eq('quiz_id', existingQuiz.id)
+            await supabaseAdmin
+              .from('listening_quizzes')
+              .delete()
+              .eq('id', existingQuiz.id)
+          }
+
+          // Create new quiz
+          const { data: newQuiz, error: quizError } = await supabaseAdmin
+            .from('listening_quizzes')
+            .insert({
+              session_id: sessionId,
+              phase: 'quiz',
+              question_count: quizQuestions.length,
+              max_score: 100,
+            })
+            .select('id')
+            .single()
+
+          if (quizError || !newQuiz) {
+            console.error('Failed to create listening quiz', quizError)
+            // Don't throw, just log - quiz generation is optional
+          } else {
+            // Insert quiz questions
+            const questionsPayload = quizQuestions.map((q) => ({
+              quiz_id: newQuiz.id,
+              prompt: q.prompt,
+              correct_option: q.correct_option,
+              distractors: q.distractors,
+              hint: q.hint,
+              reference_start_ms: q.reference_start_ms,
+              reference_end_ms: q.reference_end_ms,
+              explanation: q.explanation,
+            }))
+
+            for (const chunk of chunkArray(questionsPayload, 100)) {
+              if (chunk.length === 0) continue
+              const { error: questionsError } = await supabaseAdmin
+                .from('listening_quiz_questions')
+                .insert(chunk)
+              if (questionsError) {
+                console.error('Failed to insert quiz questions chunk', questionsError)
+                // Don't throw, just log
+              }
+            }
+
+            console.log(`Successfully generated ${quizQuestions.length} listening quiz questions`)
+          }
+        }
+      } catch (quizGenError) {
+        console.error('Failed to generate listening quiz:', quizGenError)
+        // Don't throw, just log - quiz generation is optional
       }
     }
 
