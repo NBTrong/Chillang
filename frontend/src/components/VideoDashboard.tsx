@@ -8,8 +8,10 @@ import {
   type VideoRecord,
   type StudySessionRecord,
 } from '../services/supabaseApi'
+import { useTranslation } from '../context/LanguageContext'
 
 const VideoDashboard = () => {
+  const { t } = useTranslation()
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
   const titleRef = useRef<HTMLHeadingElement | null>(null)
@@ -25,7 +27,7 @@ const VideoDashboard = () => {
 
   useEffect(() => {
     if (!videoId) {
-      setError('Video ID không hợp lệ')
+      setError(t('errors.invalidVideoId'))
       setIsLoading(false)
       return
     }
@@ -38,7 +40,7 @@ const VideoDashboard = () => {
         const videoData = await fetchVideoByYoutubeId(videoId)
 
         if (!videoData) {
-          setError('Không tìm thấy video')
+          setError(t('errors.videoNotFound'))
           setIsLoading(false)
           return
         }
@@ -59,14 +61,14 @@ const VideoDashboard = () => {
         setTotalSegments(segments.length)
       } catch (err) {
         console.error('Failed to load video data', err)
-        setError('Không thể tải dữ liệu video')
+        setError(t('errors.dataLoadError'))
       } finally {
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [videoId])
+  }, [videoId, t])
 
   // Auto-scroll from top to bottom when video is loaded
   useEffect(() => {
@@ -157,7 +159,10 @@ const VideoDashboard = () => {
     if (!seconds) return null
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
-    return secs > 0 ? `${mins} phút ${secs} giây` : `${mins} phút`
+    if (t('language.vietnamese') === 'Tiếng Việt') {
+      return secs > 0 ? `${mins} phút ${secs} giây` : `${mins} phút`
+    }
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
   }
 
   const readingProgress = session ? Math.round(session.reading_progress * 100) : 0
@@ -181,26 +186,26 @@ const VideoDashboard = () => {
   const modes = [
     {
       id: 'reading',
-      title: 'Reading Comprehension',
-      subtitle: 'Đọc hiểu & Tra từ vựng',
-      metricLabel: 'Progress',
+      title: t('dashboard.readingTitle'),
+      subtitle: t('dashboard.readingSubtitle'),
+      metricLabel: t('dashboard.progress'),
       metricValue: `${readingProgress}%`,
       progress: readingProgress,
     },
     {
       id: 'listening',
-      title: 'Listening Comprehension',
-      subtitle: 'Nghe & Làm bài tập Quiz',
-      metricLabel: 'High Score',
-      metricValue: listeningScore !== null ? `${listeningScore}/100` : 'Chưa có điểm',
+      title: t('dashboard.listeningTitle'),
+      subtitle: t('dashboard.listeningSubtitle'),
+      metricLabel: t('dashboard.highScore'),
+      metricValue: listeningScore !== null ? `${listeningScore}/100` : t('dashboard.noScore'),
     },
     {
       id: 'dictation',
-      title: 'Dictation',
-      subtitle: 'Luyện nghe & Chép chính tả',
-      metricLabel: 'Completed',
+      title: t('dashboard.dictationTitle'),
+      subtitle: t('dashboard.dictationSubtitle'),
+      metricLabel: t('dashboard.completed'),
       metricValue:
-        totalSegments > 0 ? `${dictationCompleted}/${totalSegments} Sentences` : 'Chưa có dữ liệu',
+        totalSegments > 0 ? `${dictationCompleted}/${totalSegments} ${t('dashboard.sentences')}` : t('dashboard.noData'),
     },
   ]
 
@@ -209,7 +214,7 @@ const VideoDashboard = () => {
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-primary/30 border-t-accent-primary mx-auto" />
-          <p className="text-text-secondary">Đang tải dữ liệu video...</p>
+          <p className="text-text-secondary">{t('dashboard.loading')}</p>
         </div>
       </div>
     )
@@ -219,12 +224,12 @@ const VideoDashboard = () => {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <p className="text-lg font-semibold text-red-400">{error || 'Không tìm thấy video'}</p>
+          <p className="text-lg font-semibold text-red-400">{error || t('errors.videoNotFound')}</p>
           <button
             onClick={() => navigate('/')}
             className="mt-4 rounded-lg bg-accent-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-primary/90"
           >
-            Về trang chủ
+            {t('common.backToHome')}
           </button>
         </div>
       </div>
@@ -271,15 +276,15 @@ const VideoDashboard = () => {
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">TOTAL VOCABULARY</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">{t('dashboard.totalVocabulary')}</p>
           {vocabularyCount > 0 ? (
             <p className="mt-3 text-4xl font-bold text-text-primary">{vocabularyCount}</p>
           ) : (
-            <p className="mt-3 text-lg font-medium text-text-tertiary">Chưa có từ vựng</p>
+            <p className="mt-3 text-lg font-medium text-text-tertiary">{t('dashboard.noVocabulary')}</p>
           )}
         </div>
         <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">AI DIFFICULTY</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">{t('dashboard.aiDifficulty')}</p>
           <p className="mt-3 text-2xl font-bold text-text-primary">
             {formatDifficulty(video.difficulty_level)}
           </p>
@@ -289,7 +294,7 @@ const VideoDashboard = () => {
       {/* Mode Selection Section */}
       <div className="space-y-4 outline-none" ref={modeSectionRef} tabIndex={-1}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-tertiary">SELECT A MODE</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-tertiary">{t('dashboard.selectMode')}</p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {modes.map((mode) => (

@@ -8,6 +8,7 @@ import {
   type ReadingSegment,
   type VocabularyItem,
 } from '../services/supabaseApi'
+import { useTranslation } from '../context/LanguageContext'
 
 type DictionaryEntry = {
   word: string
@@ -34,6 +35,7 @@ const vocabularyToDictionary = (vocabItems: VocabularyItem[]): Record<string, Di
 }
 
 const ReadingScreen = () => {
+  const { t } = useTranslation()
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
@@ -46,7 +48,7 @@ const ReadingScreen = () => {
 
   useEffect(() => {
     if (!videoId) {
-      setError('Video ID không hợp lệ')
+      setError(t('errors.invalidVideoId'))
       setIsLoading(false)
       return
     }
@@ -59,7 +61,7 @@ const ReadingScreen = () => {
         // Fetch video
         const videoData = await fetchVideoByYoutubeId(videoId)
         if (!videoData) {
-          setError('Không tìm thấy video')
+          setError(t('errors.videoNotFound'))
           setIsLoading(false)
           return
         }
@@ -75,14 +77,14 @@ const ReadingScreen = () => {
         setVocabularyItems(vocabulary)
       } catch (err) {
         console.error('Failed to load data', err)
-        setError('Không thể tải dữ liệu')
+        setError(t('errors.dataLoadError'))
       } finally {
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [videoId])
+  }, [videoId, t])
 
   // Đóng popup khi click ra ngoài
   useEffect(() => {
@@ -184,17 +186,17 @@ const ReadingScreen = () => {
   }
 
   const formatDifficulty = (level: string | null): string => {
-    if (!level) return 'Intermediate English'
+    if (!level) return t('difficulty.B1')
     const levelMap: Record<string, string> = {
-      A1: 'Beginner English',
-      A2: 'Elementary English',
-      B1: 'Intermediate English',
-      B2: 'Upper Intermediate English',
-      C1: 'Advanced English',
-      C2: 'Proficiency English',
-      custom: 'Intermediate English',
+      A1: t('difficulty.A1'),
+      A2: t('difficulty.A2'),
+      B1: t('difficulty.B1'),
+      B2: t('difficulty.B2'),
+      C1: t('difficulty.C1'),
+      C2: t('difficulty.C2'),
+      custom: t('difficulty.custom'),
     }
-    return levelMap[level] || 'Intermediate English'
+    return levelMap[level] || t('difficulty.B1')
   }
 
   const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
@@ -204,7 +206,7 @@ const ReadingScreen = () => {
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-primary/30 border-t-accent-primary mx-auto" />
-          <p className="text-text-secondary">Đang tải dữ liệu...</p>
+          <p className="text-text-secondary">{t('reading.loading')}</p>
         </div>
       </div>
     )
@@ -214,12 +216,12 @@ const ReadingScreen = () => {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <p className="text-lg font-semibold text-error mb-4">{error || 'Không tìm thấy video'}</p>
+          <p className="text-lg font-semibold text-error mb-4">{error || t('errors.videoNotFound')}</p>
           <button
             onClick={() => navigate('/')}
             className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           >
-            Về trang chủ
+            {t('common.backToHome')}
           </button>
         </div>
       </div>
@@ -237,7 +239,7 @@ const ReadingScreen = () => {
             onClick={() => navigate('/')}
             className="text-text-tertiary hover:text-text-primary transition-colors"
           >
-            Home
+            {t('reading.home')}
           </button>
           <span className="text-text-tertiary">/</span>
           <button
@@ -248,20 +250,20 @@ const ReadingScreen = () => {
             {difficultyLabel}
           </button>
           <span className="text-text-tertiary">/</span>
-          <span className="text-text-primary">Reading Comprehension</span>
+          <span className="text-text-primary">{t('reading.comprehension')}</span>
         </nav>
 
         {/* Main Content */}
         {/* Title */}
         <h1 className="typo-title text-center mb-16 leading-tight text-text-primary" style={{ fontSize: 'clamp(2rem, 1.8rem + 1vw, 2.8rem)' }}>
-          {video.title || 'Reading Comprehension'}
+          {video.title || t('reading.comprehension')}
         </h1>
 
         {/* Paragraphs */}
         {readingSegments.length === 0 ? (
           <div className="rounded-xl border border-border-primary bg-bg-secondary p-8 text-center">
             <p className="typo-body text-text-secondary">
-              Chưa có nội dung đọc cho video này. Vui lòng tạo reading segments trước.
+              {t('reading.noContent')}
             </p>
           </div>
         ) : (
@@ -303,7 +305,7 @@ const ReadingScreen = () => {
                 type="button"
                 onClick={handlePlayAudio}
                 className="p-2.5 text-text-primary hover:text-accent-primary hover:bg-interactive-hover rounded-lg transition-colors"
-                aria-label="Play pronunciation"
+                aria-label={t('reading.playPronunciation')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -318,7 +320,7 @@ const ReadingScreen = () => {
                 type="button"
                 onClick={handleBookmark}
                 className="p-2.5 text-text-primary hover:text-accent-primary hover:bg-interactive-hover rounded-lg transition-colors"
-                aria-label="Bookmark word"
+                aria-label={t('reading.bookmarkWord')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path

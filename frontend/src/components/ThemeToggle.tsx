@@ -1,7 +1,9 @@
 import { useTheme } from '../context/ThemeContext'
+import { useTranslation } from '../context/LanguageContext'
 
 export default function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme()
+  const { t } = useTranslation()
 
   const cycleTheme = () => {
     if (theme === 'dark') {
@@ -22,9 +24,9 @@ export default function ThemeToggle() {
 
   const getThemeLabel = () => {
     if (theme === 'system') {
-      return 'Hệ thống'
+      return t('theme.system')
     }
-    return resolvedTheme === 'dark' ? 'Tối' : 'Sáng'
+    return resolvedTheme === 'dark' ? t('theme.dark') : t('theme.light')
   }
 
   return (
@@ -32,7 +34,13 @@ export default function ThemeToggle() {
       type="button"
       onClick={cycleTheme}
       className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-lg transition-colors hover:bg-[var(--interactive-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)]"
-      aria-label={`Chuyển sang chế độ ${theme === 'dark' ? 'sáng' : theme === 'light' ? 'hệ thống' : 'tối'}`}
+      aria-label={
+        theme === 'dark' 
+          ? t('theme.switchToLight')
+          : theme === 'light' 
+            ? t('theme.switchToSystem')
+            : t('theme.switchToDark')
+      }
       title={`Theme: ${getThemeLabel()} (${theme})`}
     >
       <span className="select-none">{getThemeIcon()}</span>

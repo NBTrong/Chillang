@@ -58,7 +58,9 @@ type NormalizedTranscript = {
   }
 }
 
-const NO_CAPTION_ERROR = 'Video này không có caption'
+const NO_CAPTION_ERROR = 'Video này không có caption, vui lòng chọn video khác'
+const NO_CAPTION_ERROR_CODE = 'NO_CAPTION'
+const FETCH_ERROR_CODE = 'FETCH_TRANSCRIPT_ERROR'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -260,8 +262,8 @@ const fetchTranscriptWithFallback = async (
     fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript>
   }> = [
     // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
-    // { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
-    { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
+    { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
+    // { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
   ]
 
   const randomIndex = Math.floor(Math.random() * providers.length)
@@ -394,6 +396,85 @@ Example format:
   } catch (error) {
     console.error('Failed to extract vocabulary with Gemini:', error)
     return []
+  }
+}
+
+const generateTitleFromSegments = async (
+  segments: Array<{ subtitle: string; start: number; dur: number }>,
+  apiKey: string,
+): Promise<string | null> => {
+  if (!segments || segments.length === 0) {
+    return null
+  }
+
+  // Lấy khoảng 10 segment đầu tiên
+  const firstSegments = segments.slice(0, 10)
+  const segmentTexts = firstSegments.map((seg) => seg.subtitle).join(' ')
+
+  if (!segmentTexts.trim()) {
+    return null
+  }
+
+  const prompt = `Based on the following transcript segments from the beginning of a YouTube video, generate a short, concise title (maximum 100 characters) that accurately describes what the video is about.
+
+Transcript segments:
+${segmentTexts}
+
+Return ONLY the title text, nothing else. The title should be:
+- Short and descriptive (max 100 characters)
+- In the same language as the transcript
+- Clear and informative about the video's main topic
+
+Title:`
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      console.error('Gemini API error for title generation:', response.status, await response.text())
+      return null
+    }
+
+    const data = (await response.json()) as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string
+          }>
+        }
+      }>
+    }
+
+    const title = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null
+
+    // Giới hạn độ dài title
+    if (title && title.length > 200) {
+      return title.slice(0, 197) + '...'
+    }
+
+    return title
+  } catch (error) {
+    console.error('Failed to generate title with Gemini:', error)
+    return null
   }
 }
 
@@ -693,6 +774,21 @@ serve(async (request) => {
 
     const result = await fetchTranscriptWithFallback(videoId, rapidApiKey)
 
+    // Lấy title từ metadata, nếu không có thì tạo từ segments bằng Gemini
+    let videoTitle = (result.metadata.title as string | undefined) ?? null
+    
+    // Nếu không có title và có segments, dùng Gemini để tạo title từ 10 segment đầu
+    if (!videoTitle && geminiApiKey && result.segments.length > 0) {
+      console.log('[Title] Title missing, generating from first 10 segments using Gemini')
+      const generatedTitle = await generateTitleFromSegments(result.segments, geminiApiKey)
+      if (generatedTitle) {
+        videoTitle = generatedTitle
+        console.log('[Title] Generated title:', generatedTitle)
+      } else {
+        console.warn('[Title] Failed to generate title from segments')
+      }
+    }
+
     const [difficultyLevel, vocabularyList] = await Promise.all([
       geminiApiKey
         ? assessDifficultyWithGemini(result.transcript, geminiApiKey)
@@ -705,7 +801,7 @@ serve(async (request) => {
     const videoPayload = {
       owner_id: ownerId,
       youtube_video_id: videoId,
-      title: (result.metadata.title as string | undefined) ?? null,
+      title: videoTitle,
       channel_name: null as string | null,
       thumbnail_url: (() => {
         const thumbnails = result.metadata.thumbnails as Array<{ url: string }> | undefined
@@ -923,6 +1019,69 @@ serve(async (request) => {
       }
     }
 
+    // Generate and insert dictation prompts from segments
+    if (result.segments.length > 0) {
+      try {
+        // Delete existing dictation prompts for this session
+        const { error: deleteError } = await supabaseAdmin
+          .from('dictation_prompts')
+          .delete()
+          .eq('session_id', sessionId)
+
+        if (deleteError) {
+          console.error('Failed to delete existing dictation prompts', deleteError)
+          // Continue anyway
+        }
+
+        // Create dictation prompts from segments
+        // Filter out very short segments (less than 3 words) and very long ones (more than 50 words)
+        const dictationPrompts = result.segments
+          .map((segment) => {
+            const wordCount = segment.subtitle.trim().split(/\s+/).length
+            if (wordCount < 3 || wordCount > 50) {
+              return null
+            }
+            return {
+              session_id: sessionId,
+              prompt_index: 0, // Will be set after filtering
+              audio_url: null, // Using YouTube iframe instead
+              expected_text: segment.subtitle.trim(),
+              context: {
+                start_time: segment.start, // in seconds
+                end_time: segment.start + segment.dur,
+                start_time_ms: Math.round(segment.start * 1000),
+                end_time_ms: Math.round((segment.start + segment.dur) * 1000),
+                word_count: wordCount,
+              },
+            }
+          })
+          .filter((prompt): prompt is NonNullable<typeof prompt> => prompt !== null)
+          .map((prompt, index) => ({
+            ...prompt,
+            prompt_index: index, // Set sequential index after filtering
+          }))
+
+        if (dictationPrompts.length > 0) {
+          // Insert in chunks
+          for (const chunk of chunkArray(dictationPrompts, 100)) {
+            if (chunk.length === 0) continue
+            const { error: promptsError } = await supabaseAdmin
+              .from('dictation_prompts')
+              .insert(chunk)
+            if (promptsError) {
+              console.error('Failed to insert dictation prompts chunk', promptsError)
+              // Don't throw, just log
+            }
+          }
+
+          console.log(`Successfully generated ${dictationPrompts.length} dictation prompts`)
+        }
+      } catch (dictationError) {
+        console.error('Failed to generate dictation prompts:', dictationError)
+        // Don't throw, just log - dictation prompt generation is optional
+      }
+    }
+
     return jsonResponse(200, {
       transcript: result.transcript,
       language: result.language,
@@ -935,9 +1094,10 @@ serve(async (request) => {
   } catch (error) {
     console.error('fetch-youtube-caption error', error)
     const message = error instanceof Error ? error.message : 'Unexpected error'
-    const isNoCaption = message.includes(NO_CAPTION_ERROR)
+    const isNoCaption = message.includes(NO_CAPTION_ERROR) || message.includes('Video này không có caption')
     return jsonResponse(isNoCaption ? 404 : 500, {
       error: isNoCaption ? NO_CAPTION_ERROR : 'Không thể lấy transcript, vui lòng thử lại.',
+      errorCode: isNoCaption ? NO_CAPTION_ERROR_CODE : FETCH_ERROR_CODE,
       details: message,
     })
   }

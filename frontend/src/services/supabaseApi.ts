@@ -282,3 +282,46 @@ export const generateMoreQuestions = async (sessionId: string) => {
   return data
 }
 
+export type UserProfile = {
+  id: string
+  language: 'vi' | 'en'
+  created_at: string
+  updated_at: string
+}
+
+export const getUserProfile = async (): Promise<UserProfile | null> => {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) return null
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.user.id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data as UserProfile | null
+}
+
+export const updateUserLanguage = async (language: 'vi' | 'en'): Promise<UserProfile> => {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user.user) {
+    throw new Error('User not authenticated')
+  }
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert(
+      {
+        id: user.user.id,
+        language,
+      },
+      { onConflict: 'id' }
+    )
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data as UserProfile
+}
+

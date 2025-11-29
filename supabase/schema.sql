@@ -137,6 +137,18 @@ create table if not exists public.flashcard_reviews (
   reviewed_at timestamptz not null default timezone('utc', now())
 );
 
+-- User profiles for storing user preferences
+create table if not exists public.user_profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  language text default 'vi' check (language in ('vi', 'en')),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create trigger set_user_profiles_updated_at
+before update on public.user_profiles
+for each row execute procedure public.set_updated_at();
+
 -- Denormalized view for quick dashboard lookups
 create or replace view public.recent_study_sessions as
 select
@@ -163,6 +175,7 @@ alter table public.listening_quiz_questions enable row level security;
 alter table public.dictation_prompts enable row level security;
 alter table public.vocabulary_items enable row level security;
 alter table public.flashcard_reviews enable row level security;
+alter table public.user_profiles enable row level security;
 
 create policy "Users manage their videos" on public.videos
   for all
@@ -264,6 +277,11 @@ create policy "Users delete flashcard reviews" on public.flashcard_reviews
       and v.owner_id = auth.uid()
     )
   );
+
+create policy "Users manage their own profile" on public.user_profiles
+  for all
+  using (id = auth.uid())
+  with check (id = auth.uid());
 
 -- Allow querying the view
 alter view public.recent_study_sessions set (security_barrier = true);

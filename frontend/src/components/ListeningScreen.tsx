@@ -12,6 +12,7 @@ import {
   type ListeningQuizQuestion,
   type ReadingSegment,
 } from '../services/supabaseApi'
+import { useTranslation } from '../context/LanguageContext'
 
 type Question = {
   id: string
@@ -63,6 +64,7 @@ declare global {
 }
 
 const ListeningScreen = () => {
+  const { t } = useTranslation()
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
   const [autoScroll, setAutoScroll] = useState(true)
@@ -158,7 +160,7 @@ const ListeningScreen = () => {
   // Fetch data on mount
   useEffect(() => {
     if (!videoId) {
-      setError('Video ID không hợp lệ')
+      setError(t('errors.invalidVideoId'))
       setIsLoading(false)
       return
     }
@@ -171,7 +173,7 @@ const ListeningScreen = () => {
         // Fetch video
         const videoData = await fetchVideoByYoutubeId(videoId)
         if (!videoData) {
-          setError('Không tìm thấy video')
+          setError(t('errors.videoNotFound'))
           setIsLoading(false)
           return
         }
@@ -184,7 +186,7 @@ const ListeningScreen = () => {
         ])
 
         if (!sessionData) {
-          setError('Không tìm thấy study session')
+          setError(t('errors.sessionNotFound'))
           setIsLoading(false)
           return
         }
@@ -226,14 +228,14 @@ const ListeningScreen = () => {
         }
       } catch (err) {
         console.error('Failed to load data:', err)
-        setError('Không thể tải dữ liệu')
+        setError(t('errors.dataLoadError'))
       } finally {
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [videoId])
+  }, [videoId, t])
 
   // Sync transcript height with video height
   useEffect(() => {
@@ -620,7 +622,7 @@ const ListeningScreen = () => {
       }
     } catch (err) {
       console.error('Failed to generate more questions:', err)
-      alert('Không thể tạo thêm câu hỏi. Vui lòng thử lại.')
+      alert(t('errors.generateQuestionsError'))
     } finally {
       setIsGenerating(false)
     }
@@ -628,27 +630,27 @@ const ListeningScreen = () => {
 
   // Format difficulty for breadcrumb
   const formatDifficulty = (level: string | null): string => {
-    if (!level) return 'Intermediate English'
+    if (!level) return t('difficulty.B1')
     const levelMap: Record<string, string> = {
-      A1: 'Beginner English',
-      A2: 'Elementary English',
-      B1: 'Intermediate English',
-      B2: 'Upper Intermediate English',
-      C1: 'Advanced English',
-      C2: 'Proficiency English',
-      custom: 'Intermediate English',
+      A1: t('difficulty.A1'),
+      A2: t('difficulty.A2'),
+      B1: t('difficulty.B1'),
+      B2: t('difficulty.B2'),
+      C1: t('difficulty.C1'),
+      C2: t('difficulty.C2'),
+      custom: t('difficulty.custom'),
     }
-    return levelMap[level] || 'Intermediate English'
+    return levelMap[level] || t('difficulty.B1')
   }
 
-  const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
+  const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : t('difficulty.B1')
 
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-primary/30 border-t-accent-primary mx-auto" />
-          <p className="text-text-secondary">Đang tải dữ liệu...</p>
+          <p className="text-text-secondary">{t('listening.loading')}</p>
         </div>
       </div>
     )
@@ -658,12 +660,12 @@ const ListeningScreen = () => {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <p className="text-lg font-semibold text-error mb-4">{error || 'Không tìm thấy video'}</p>
+          <p className="text-lg font-semibold text-error mb-4">{error || t('errors.videoNotFound')}</p>
           <button
             onClick={() => navigate('/')}
             className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           >
-            Về trang chủ
+            {t('common.backToHome')}
           </button>
         </div>
       </div>
@@ -680,7 +682,7 @@ const ListeningScreen = () => {
             onClick={() => navigate('/')}
             className="transition-chill hover:text-accent-primary"
           >
-            Home
+            {t('listening.home')}
           </button>
           <span>/</span>
           <button
@@ -691,14 +693,14 @@ const ListeningScreen = () => {
             {difficultyLabel}
           </button>
           <span>/</span>
-          <span className="text-text-primary">Listening Comprehension</span>
+          <span className="text-text-primary">{t('listening.comprehension')}</span>
         </div>
 
         {/* Title and Instruction */}
         <div className="mb-6">
-          <h2 className="mb-2 typo-title text-text-primary">{video.title || 'Listening Comprehension'}</h2>
+          <h2 className="mb-2 typo-title text-text-primary">{video.title || t('listening.comprehension')}</h2>
           <p className="typo-body text-text-secondary">
-            Watch the video and answer the questions below to test your listening skills.
+            {t('listening.instruction')}
           </p>
         </div>
 
@@ -761,7 +763,7 @@ const ListeningScreen = () => {
         <div className="mb-8 flex flex-wrap items-center gap-3">
           {isSubmitted && score !== null && (
             <div className="flex items-center gap-4 rounded-lg border border-border-accent bg-accent-secondary/10 px-6 py-3 shadow-chill-sm">
-              <p className="typo-caption text-text-tertiary">Result</p>
+              <p className="typo-caption text-text-tertiary">{t('listening.result')}</p>
               <p className="typo-title leading-none text-accent-secondary">{score}/100</p>
             </div>
           )}
@@ -771,7 +773,7 @@ const ListeningScreen = () => {
               disabled={Object.keys(userAnswers).length === 0 || questions.length === 0}
               className="rounded-lg border border-accent-primary bg-accent-primary px-6 py-3 typo-body-sm font-semibold text-white transition-chill hover:bg-accent-primary/90 hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Answers
+              {t('listening.submitAnswers')}
             </button>
           )}
           {isSubmitted && (
@@ -783,7 +785,7 @@ const ListeningScreen = () => {
               }}
               className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
             >
-              Try Again
+              {t('listening.tryAgain')}
             </button>
           )}
           {!isSubmitted && (
@@ -793,17 +795,17 @@ const ListeningScreen = () => {
               className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating 
-                ? 'Generating...' 
+                ? t('listening.generating')
                 : questions.length === 0 
-                  ? 'Generate Questions' 
-                  : 'Generate More Questions'}
+                  ? t('listening.generateQuestions')
+                  : t('listening.generateMore')}
             </button>
           )}
           <button
             onClick={() => setShowTranscript(!showTranscript)}
             className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
           >
-            {showTranscript ? 'Hide Transcript' : 'Show Transcript'}
+            {showTranscript ? t('listening.hideTranscript') : t('listening.showTranscript')}
           </button>
         </div>
 
@@ -811,10 +813,10 @@ const ListeningScreen = () => {
         {questions.length === 0 ? (
           <div className="rounded-xl border border-border-primary bg-bg-secondary p-8 text-center">
             <p className="typo-body text-text-secondary mb-4">
-              Chưa có câu hỏi cho video này.
+              {t('listening.noQuestions')}
             </p>
             <p className="typo-body-sm text-text-tertiary">
-              Nhấn nút "Generate Questions" ở trên để tạo câu hỏi.
+              {t('listening.noQuestionsMessage')}
             </p>
           </div>
         ) : (
@@ -887,7 +889,7 @@ const ListeningScreen = () => {
                       }`}
                     >
                       <p className="typo-body-sm">
-                        {isCorrect ? '✓ ' : '✗ '}
+                        {isCorrect ? t('listening.correct') : t('listening.incorrect')}
                         {q.feedback}
                       </p>
                     </div>

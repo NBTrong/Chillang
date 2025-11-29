@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useTranslation } from '../context/LanguageContext'
 
 const extractYoutubeId = (url: string) => {
   const pattern =
@@ -9,8 +10,6 @@ const extractYoutubeId = (url: string) => {
   const match = url.match(pattern)
   return match?.[1] || match?.[2] || 'new-session'
 }
-
-const NO_CAPTION_ERROR = 'Video này không có caption'
 
 type TranscriptResponse = {
   transcript: string
@@ -20,6 +19,7 @@ type TranscriptResponse = {
 }
 
 const HomeScreen = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [videoUrl, setVideoUrl] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -31,7 +31,7 @@ const HomeScreen = () => {
 
     const videoId = extractYoutubeId(videoUrl.trim())
     if (videoId === 'new-session') {
-      setErrorMessage('Link YouTube không hợp lệ.')
+      setErrorMessage(t('home.invalidUrl'))
       return
     }
 
@@ -44,14 +44,21 @@ const HomeScreen = () => {
       })
 
       if (error) {
-        const message = error.message || 'Không thể lấy transcript, vui lòng thử lại.'
-        setErrorMessage(message.includes(NO_CAPTION_ERROR) ? NO_CAPTION_ERROR : message)
+        // Check if error has errorCode for translation
+        const errorCode = (error as any).errorCode
+        if (errorCode === 'NO_CAPTION') {
+          setErrorMessage(t('errors.noCaption'))
+        } else {
+          const message = error.message || t('home.fetchError')
+          const noCaptionError = t('errors.noCaption')
+          setErrorMessage(message.includes(noCaptionError) || message.includes('Video này không có caption') ? noCaptionError : message)
+        }
         setIsProcessing(false)
         return
       }
 
       if (!data?.transcript || !data?.youtubeVideoId) {
-        setErrorMessage(NO_CAPTION_ERROR)
+        setErrorMessage(t('errors.noCaption'))
         setIsProcessing(false)
         return
       }
@@ -60,7 +67,7 @@ const HomeScreen = () => {
       navigate(`/${data.youtubeVideoId}/dash`)
     } catch (err) {
       console.error('Failed to fetch transcript', err)
-      setErrorMessage('Không thể lấy transcript, vui lòng thử lại.')
+      setErrorMessage(t('home.fetchError'))
       setIsProcessing(false)
     }
   }
@@ -71,10 +78,10 @@ const HomeScreen = () => {
         {/* Hero copy trên, input bên dưới */}
         <div className="space-y-3">
           <h1 className="typo-display text-text-primary">
-            Bạn muốn học gì hôm nay?
+            {t('home.title')}
           </h1>
           <p className="typo-body mx-auto max-w-xl text-text-secondary">
-            Dán link một video YouTube và bắt đầu một phiên học mới.
+            {t('home.subtitle')}
           </p>
         </div>
 
@@ -88,7 +95,7 @@ const HomeScreen = () => {
               type="url"
               value={videoUrl}
               onChange={(event) => setVideoUrl(event.target.value)}
-              placeholder="Dán link YouTube video vào đây..."
+              placeholder={t('home.inputPlaceholder')}
               className="flex-1 border-none bg-transparent text-base text-text-primary placeholder:text-text-tertiary focus:outline-none"
             />
 
@@ -97,7 +104,7 @@ const HomeScreen = () => {
                 type="submit"
                 disabled={isProcessing}
                 className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary text-xl text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100"
-                aria-label="Gửi link video"
+                aria-label={t('home.submitButton')}
               >
                 {isProcessing ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
@@ -118,7 +125,7 @@ const HomeScreen = () => {
 
           {isProcessing && (
             <div className="animate-pulse-chill text-sm font-medium text-accent-primary">
-              Đang để AI chuẩn bị lớp học của bạn...
+              {t('home.processing')}
             </div>
           )}
 

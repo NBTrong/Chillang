@@ -1,0 +1,135 @@
+import type { TranslationKey } from '../types'
+
+export const vi: Record<TranslationKey, string> = {
+  // Home Screen
+  'home.title': 'Bạn muốn học gì hôm nay?',
+  'home.subtitle': 'Dán link một video YouTube và bắt đầu một phiên học mới.',
+  'home.inputPlaceholder': 'Dán link YouTube video vào đây...',
+  'home.submitButton': 'Gửi link video',
+  'home.processing': 'Đang để AI chuẩn bị lớp học của bạn...',
+  'home.invalidUrl': 'Link YouTube không hợp lệ.',
+  'home.fetchError': 'Không thể lấy transcript, vui lòng thử lại.',
+  'home.noCaption': 'Video này không có caption, vui lòng chọn video khác',
+  
+  // Errors
+  'errors.invalidVideoId': 'Video ID không hợp lệ',
+  'errors.videoNotFound': 'Không tìm thấy video',
+  'errors.dataLoadError': 'Không thể tải dữ liệu',
+  'errors.sessionNotFound': 'Không tìm thấy study session',
+  'errors.noCaption': 'Video này không có caption, vui lòng chọn video khác',
+  'errors.fetchTranscriptError': 'Không thể lấy transcript, vui lòng thử lại.',
+  'errors.generateQuestionsError': 'Không thể tạo thêm câu hỏi. Vui lòng thử lại.',
+  
+  // Video Dashboard
+  'dashboard.loading': 'Đang tải dữ liệu video...',
+  'dashboard.readingTitle': 'Reading Comprehension',
+  'dashboard.readingSubtitle': 'Đọc hiểu & Tra từ vựng',
+  'dashboard.listeningTitle': 'Listening Comprehension',
+  'dashboard.listeningSubtitle': 'Nghe & Làm bài tập Quiz',
+  'dashboard.dictationTitle': 'Dictation',
+  'dashboard.dictationSubtitle': 'Luyện nghe & Chép chính tả',
+  'dashboard.progress': 'Tiến độ',
+  'dashboard.highScore': 'Điểm cao nhất',
+  'dashboard.completed': 'Hoàn thành',
+  'dashboard.noScore': 'Chưa có điểm',
+  'dashboard.noData': 'Chưa có dữ liệu',
+  'dashboard.totalVocabulary': 'TỔNG TỪ VỰNG',
+  'dashboard.aiDifficulty': 'ĐỘ KHÓ AI',
+  'dashboard.noVocabulary': 'Chưa có từ vựng',
+  'dashboard.selectMode': 'CHỌN CHẾ ĐỘ',
+  'dashboard.sentences': 'câu',
+  
+  // Reading Screen
+  'reading.loading': 'Đang tải dữ liệu...',
+  'reading.noContent': 'Chưa có nội dung đọc cho video này. Vui lòng tạo reading segments trước.',
+  'reading.noContentMessage': 'Chưa có nội dung đọc cho video này. Vui lòng tạo reading segments trước.',
+  'reading.home': 'Home',
+  'reading.comprehension': 'Reading Comprehension',
+  'reading.playPronunciation': 'Phát âm',
+  'reading.bookmarkWord': 'Đánh dấu từ',
+  
+  // Listening Screen
+  'listening.loading': 'Đang tải dữ liệu...',
+  'listening.instruction': 'Xem video và trả lời các câu hỏi bên dưới để kiểm tra kỹ năng nghe của bạn.',
+  'listening.comprehension': 'Listening Comprehension',
+  'listening.result': 'Kết quả',
+  'listening.submitAnswers': 'Nộp bài',
+  'listening.tryAgain': 'Thử lại',
+  'listening.generateQuestions': 'Tạo câu hỏi',
+  'listening.generateMore': 'Tạo thêm câu hỏi',
+  'listening.generating': 'Đang tạo...',
+  'listening.hideTranscript': 'Ẩn transcript',
+  'listening.showTranscript': 'Hiện transcript',
+  'listening.noQuestions': 'Chưa có câu hỏi cho video này.',
+  'listening.noQuestionsMessage': 'Nhấn nút "Generate Questions" ở trên để tạo câu hỏi.',
+  'listening.home': 'Home',
+  'listening.correct': '✓ ',
+  'listening.incorrect': '✗ ',
+  
+  // Dictation Screen
+  'dictation.title': 'Dictation',
+  'dictation.question': 'Câu',
+  'dictation.inputPlaceholder': 'Gõ những gì bạn nghe...',
+  'dictation.checkAnswer': 'Kiểm tra',
+  'dictation.yourAnswer': 'Câu trả lời của bạn:',
+  'dictation.correctAnswer': 'Câu trả lời đúng:',
+  'dictation.replay': 'Phát lại',
+  'dictation.hint': 'Gợi ý',
+  'dictation.skip': 'Bỏ qua',
+  'dictation.close': 'Đóng',
+  'dictation.correct': '✓ Chính xác! Câu trả lời của bạn hoàn toàn đúng.',
+  'dictation.incorrect': '✗ Câu trả lời chưa chính xác. Gõ bất kỳ ký tự nào để ẩn đáp án và tiếp tục luyện tập.',
+  'dictation.practice': 'Practice Dictation',
+  'dictation.noPrompts': 'Chưa có dictation prompts cho video này',
+  'dictation.noPromptsMessage': 'Vui lòng tạo dictation prompts trước khi sử dụng tính năng này.',
+  'dictation.completed': '🎉 Hoàn thành!',
+  'dictation.completedMessage': 'Bạn đã hoàn thành tất cả các câu dictation cho video này.',
+  'dictation.nextQuestion': 'Câu tiếp theo (Enter)',
+  'dictation.backToDashboard': 'Quay lại Dashboard',
+  
+  // Layout
+  'layout.newSession': 'New Study Session',
+  'layout.vocabularyManager': 'Vocabulary Manager',
+  'layout.recentVideos': 'RECENT VIDEOS',
+  'layout.noVideos': 'Chưa có video nào',
+  'layout.closeSidebar': 'Đóng sidebar',
+  'layout.closeNav': 'Close navigation overlay',
+  'layout.toggleNav': 'Toggle navigation',
+  'layout.welcome': 'Chào mừng đến Chillang',
+  'layout.welcomeSubtitle': 'Đăng nhập với Google để lưu tiến độ học, lịch sử video và từ vựng của riêng bạn.',
+  'layout.checkingAuth': 'Đang kiểm tra phiên đăng nhập...',
+  'layout.openingGoogle': 'Đang mở Google...',
+  'layout.continueWithGoogle': 'Tiếp tục với Google',
+  'layout.account': 'Tài khoản',
+  'layout.signOut': 'Đăng xuất',
+  'layout.close': 'Đóng',
+  
+  // Theme Toggle
+  'theme.switchToLight': 'Chuyển sang chế độ sáng',
+  'theme.switchToSystem': 'Chuyển sang chế độ hệ thống',
+  'theme.switchToDark': 'Chuyển sang chế độ tối',
+  'theme.light': 'Sáng',
+  'theme.dark': 'Tối',
+  'theme.system': 'Hệ thống',
+  
+  // Language Toggle
+  'language.vietnamese': 'Tiếng Việt',
+  'language.english': 'English',
+  'language.switchTo': 'Chuyển sang',
+  
+  // Common
+  'common.home': 'Home',
+  'common.backToHome': 'Về trang chủ',
+  'common.loading': 'Đang tải...',
+  'common.error': 'Lỗi',
+  
+  // Difficulty Levels
+  'difficulty.A1': 'Beginner English',
+  'difficulty.A2': 'Elementary English',
+  'difficulty.B1': 'Intermediate English',
+  'difficulty.B2': 'Upper Intermediate English',
+  'difficulty.C1': 'Advanced English',
+  'difficulty.C2': 'Proficiency English',
+  'difficulty.custom': 'Intermediate English',
+}
+

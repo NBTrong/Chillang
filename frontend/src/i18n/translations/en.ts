@@ -1,0 +1,135 @@
+import type { TranslationKey } from '../types'
+
+export const en: Record<TranslationKey, string> = {
+  // Home Screen
+  'home.title': 'What would you like to learn today?',
+  'home.subtitle': 'Paste a YouTube video link and start a new study session.',
+  'home.inputPlaceholder': 'Paste YouTube video link here...',
+  'home.submitButton': 'Submit video link',
+  'home.processing': 'Preparing your class with AI...',
+  'home.invalidUrl': 'Invalid YouTube link.',
+  'home.fetchError': 'Unable to fetch transcript, please try again.',
+  'home.noCaption': 'This video has no captions, please choose another video',
+  
+  // Errors
+  'errors.invalidVideoId': 'Invalid video ID',
+  'errors.videoNotFound': 'Video not found',
+  'errors.dataLoadError': 'Unable to load data',
+  'errors.sessionNotFound': 'Study session not found',
+  'errors.noCaption': 'This video has no captions, please choose another video',
+  'errors.fetchTranscriptError': 'Unable to fetch transcript, please try again.',
+  'errors.generateQuestionsError': 'Unable to generate more questions. Please try again.',
+  
+  // Video Dashboard
+  'dashboard.loading': 'Loading video data...',
+  'dashboard.readingTitle': 'Reading Comprehension',
+  'dashboard.readingSubtitle': 'Read & Look up vocabulary',
+  'dashboard.listeningTitle': 'Listening Comprehension',
+  'dashboard.listeningSubtitle': 'Listen & Take quiz',
+  'dashboard.dictationTitle': 'Dictation',
+  'dashboard.dictationSubtitle': 'Practice listening & spelling',
+  'dashboard.progress': 'Progress',
+  'dashboard.highScore': 'High Score',
+  'dashboard.completed': 'Completed',
+  'dashboard.noScore': 'No score yet',
+  'dashboard.noData': 'No data yet',
+  'dashboard.totalVocabulary': 'TOTAL VOCABULARY',
+  'dashboard.aiDifficulty': 'AI DIFFICULTY',
+  'dashboard.noVocabulary': 'No vocabulary yet',
+  'dashboard.selectMode': 'SELECT A MODE',
+  'dashboard.sentences': 'Sentences',
+  
+  // Reading Screen
+  'reading.loading': 'Loading data...',
+  'reading.noContent': 'No reading content available for this video. Please create reading segments first.',
+  'reading.noContentMessage': 'No reading content available for this video. Please create reading segments first.',
+  'reading.home': 'Home',
+  'reading.comprehension': 'Reading Comprehension',
+  'reading.playPronunciation': 'Play pronunciation',
+  'reading.bookmarkWord': 'Bookmark word',
+  
+  // Listening Screen
+  'listening.loading': 'Loading data...',
+  'listening.instruction': 'Watch the video and answer the questions below to test your listening skills.',
+  'listening.comprehension': 'Listening Comprehension',
+  'listening.result': 'Result',
+  'listening.submitAnswers': 'Submit Answers',
+  'listening.tryAgain': 'Try Again',
+  'listening.generateQuestions': 'Generate Questions',
+  'listening.generateMore': 'Generate More Questions',
+  'listening.generating': 'Generating...',
+  'listening.hideTranscript': 'Hide Transcript',
+  'listening.showTranscript': 'Show Transcript',
+  'listening.noQuestions': 'No questions available for this video.',
+  'listening.noQuestionsMessage': 'Click the "Generate Questions" button above to create questions.',
+  'listening.home': 'Home',
+  'listening.correct': '✓ ',
+  'listening.incorrect': '✗ ',
+  
+  // Dictation Screen
+  'dictation.title': 'Dictation',
+  'dictation.question': 'Question',
+  'dictation.inputPlaceholder': 'Type what you hear...',
+  'dictation.checkAnswer': 'Check Answer',
+  'dictation.yourAnswer': 'Your answer:',
+  'dictation.correctAnswer': 'Correct answer:',
+  'dictation.replay': 'Replay',
+  'dictation.hint': 'Hint',
+  'dictation.skip': 'Skip',
+  'dictation.close': 'Close',
+  'dictation.correct': '✓ Correct! Your answer is completely right.',
+  'dictation.incorrect': '✗ Answer is not correct. Type any character to hide the answer and continue practicing.',
+  'dictation.practice': 'Practice Dictation',
+  'dictation.noPrompts': 'No dictation prompts available for this video',
+  'dictation.noPromptsMessage': 'Please create dictation prompts before using this feature.',
+  'dictation.completed': '🎉 Completed!',
+  'dictation.completedMessage': 'You have completed all dictation prompts for this video.',
+  'dictation.nextQuestion': 'Next Question (Enter)',
+  'dictation.backToDashboard': 'Back to Dashboard',
+  
+  // Layout
+  'layout.newSession': 'New Study Session',
+  'layout.vocabularyManager': 'Vocabulary Manager',
+  'layout.recentVideos': 'RECENT VIDEOS',
+  'layout.noVideos': 'No videos yet',
+  'layout.closeSidebar': 'Close sidebar',
+  'layout.closeNav': 'Close navigation overlay',
+  'layout.toggleNav': 'Toggle navigation',
+  'layout.welcome': 'Welcome to Chillang',
+  'layout.welcomeSubtitle': 'Sign in with Google to save your learning progress, video history, and personal vocabulary.',
+  'layout.checkingAuth': 'Checking login session...',
+  'layout.openingGoogle': 'Opening Google...',
+  'layout.continueWithGoogle': 'Continue with Google',
+  'layout.account': 'Account',
+  'layout.signOut': 'Sign Out',
+  'layout.close': 'Close',
+  
+  // Theme Toggle
+  'theme.switchToLight': 'Switch to light mode',
+  'theme.switchToSystem': 'Switch to system mode',
+  'theme.switchToDark': 'Switch to dark mode',
+  'theme.light': 'Light',
+  'theme.dark': 'Dark',
+  'theme.system': 'System',
+  
+  // Language Toggle
+  'language.vietnamese': 'Tiếng Việt',
+  'language.english': 'English',
+  'language.switchTo': 'Switch to',
+  
+  // Common
+  'common.home': 'Home',
+  'common.backToHome': 'Back to Home',
+  'common.loading': 'Loading...',
+  'common.error': 'Error',
+  
+  // Difficulty Levels
+  'difficulty.A1': 'Beginner English',
+  'difficulty.A2': 'Elementary English',
+  'difficulty.B1': 'Intermediate English',
+  'difficulty.B2': 'Upper Intermediate English',
+  'difficulty.C1': 'Advanced English',
+  'difficulty.C2': 'Proficiency English',
+  'difficulty.custom': 'Intermediate English',
+}
+
