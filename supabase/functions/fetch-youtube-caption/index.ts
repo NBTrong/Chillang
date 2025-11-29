@@ -26,6 +26,24 @@ type YoutubeV2Response = {
   }>
 }
 
+type YtApiResponse = {
+  id: string
+  transcript: Array<{
+    startMs: string
+    endMs: string
+    startTime: string
+    text: string
+  }>
+  selected: {
+    title: string
+    params: string
+  }
+  languageMenu: Array<{
+    title: string
+    params: string
+  }>
+}
+
 type NormalizedTranscript = {
   transcript: string
   language: string | null
@@ -35,7 +53,7 @@ type NormalizedTranscript = {
     dur: number
   }>
   metadata: {
-    provider: 'youtube-transcriptor' | 'youtube-v2'
+    provider: 'youtube-transcriptor' | 'youtube-v2' | 'yt-api'
     [key: string]: unknown
   }
 }
@@ -169,6 +187,70 @@ const fetchTranscriptFromProvider2 = async (
   }
 }
 
+const fetchTranscriptFromProvider3 = async (
+  videoId: string,
+  apiKey: string,
+): Promise<NormalizedTranscript> => {
+  const url = `https://yt-api.p.rapidapi.com/get_transcript?id=${encodeURIComponent(videoId)}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-rapidapi-key': apiKey,
+      'x-rapidapi-host': 'yt-api.p.rapidapi.com',
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(NO_CAPTION_ERROR)
+    }
+    throw new Error(`Provider 3 request failed (${response.status})`)
+  }
+
+  const payload = (await response.json()) as YtApiResponse
+  if (!payload.transcript || !Array.isArray(payload.transcript) || payload.transcript.length === 0) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  const decodedSegments = payload.transcript
+    .filter((item) => item.text && item.text.trim())
+    .map((item) => {
+      const startMs = parseInt(item.startMs, 10)
+      const endMs = parseInt(item.endMs, 10)
+      const start = isNaN(startMs) ? 0 : startMs / 1000 // Convert ms to seconds
+      const dur = isNaN(startMs) || isNaN(endMs) ? 0 : (endMs - startMs) / 1000 // Convert ms to seconds
+
+      return {
+        subtitle: decodeHtmlEntities(item.text.trim()),
+        start,
+        dur,
+      }
+    })
+
+  if (decodedSegments.length === 0) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  const transcript = decodedSegments.map((seg) => seg.subtitle).join(' ')
+
+  if (!transcript.trim()) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  const availableLangs = payload.languageMenu?.map((lang) => lang.title) ?? []
+
+  return {
+    transcript,
+    language: payload.selected?.title ?? null,
+    segments: decodedSegments,
+    metadata: {
+      provider: 'yt-api',
+      selected_language: payload.selected?.title,
+      available_langs: availableLangs,
+    },
+  }
+}
+
 const fetchTranscriptWithFallback = async (
   videoId: string,
   apiKey: string,
@@ -177,13 +259,14 @@ const fetchTranscriptWithFallback = async (
     name: string
     fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript>
   }> = [
-    { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
-    { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
+    // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
+    // { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
+    { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
   ]
 
   const randomIndex = Math.floor(Math.random() * providers.length)
   const primaryProvider = providers[randomIndex]
-  const fallbackProvider = providers[1 - randomIndex]
+  const remainingProviders = providers.filter((_, idx) => idx !== randomIndex)
 
   console.log(`[Transcript] Random selected provider: ${primaryProvider.name}`)
 
@@ -195,18 +278,25 @@ const fetchTranscriptWithFallback = async (
       `[Transcript] Primary provider ${primaryProvider.name} failed:`,
       primaryError instanceof Error ? primaryError.message : primaryError,
     )
-    console.log(`[Transcript] Falling back to provider: ${fallbackProvider.name}`)
 
-    try {
-      const result = await fallbackProvider.fetch(videoId, apiKey)
-      return { ...result, providerUsed: fallbackProvider.name }
-    } catch (fallbackError) {
-      console.error(
-        `[Transcript] Fallback provider ${fallbackProvider.name} also failed:`,
-        fallbackError instanceof Error ? fallbackError.message : fallbackError,
-      )
-      throw primaryError
+    // Try remaining providers in order
+    for (const fallbackProvider of remainingProviders) {
+      console.log(`[Transcript] Trying fallback provider: ${fallbackProvider.name}`)
+      try {
+        const result = await fallbackProvider.fetch(videoId, apiKey)
+        return { ...result, providerUsed: fallbackProvider.name }
+      } catch (fallbackError) {
+        console.warn(
+          `[Transcript] Fallback provider ${fallbackProvider.name} failed:`,
+          fallbackError instanceof Error ? fallbackError.message : fallbackError,
+        )
+        // Continue to next provider
+      }
     }
+
+    // All providers failed
+    console.error(`[Transcript] All providers failed for video ${videoId}`)
+    throw primaryError
   }
 }
 

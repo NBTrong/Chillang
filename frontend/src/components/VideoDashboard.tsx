@@ -252,7 +252,7 @@ const VideoDashboard = () => {
 
         {/* Title */}
         <h1 ref={titleRef} tabIndex={-1} className="typo-title text-text-primary outline-none">
-          {video.title || 'Untitled Video'}
+          {video.title || 'YOUTUBE VIDEO'}
         </h1>
 
         {/* Action Buttons */}

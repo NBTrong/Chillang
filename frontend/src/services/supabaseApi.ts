@@ -241,3 +241,15 @@ export const countVocabularyByVideo = async (videoId: string) => {
   return count ?? 0
 }
 
+export const updateStudySession = async (sessionId: string, updates: Partial<StudySessionRecord>) => {
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .update(updates)
+    .eq('id', sessionId)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data as StudySessionRecord
+}
+

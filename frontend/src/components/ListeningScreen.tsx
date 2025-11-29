@@ -106,7 +106,7 @@ const ListeningScreen = () => {
         </div>
 
         {/* Video and Transcript Section */}
-        <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_400px]">
+        <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_400px] lg:items-stretch">
           {/* Video Player */}
           <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border-primary bg-bg-secondary shadow-chill-md transition-chill">
             {/* Background pattern */}
@@ -167,33 +167,33 @@ const ListeningScreen = () => {
 
           {/* Transcript Panel */}
           {showTranscript && (
-            <div className="rounded-xl border border-border-primary bg-bg-secondary p-4 shadow-chill-sm transition-chill">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="typo-subtitle text-text-primary">Transcript</h3>
-                  <label className="flex items-center gap-2 typo-body-sm text-text-secondary">
-                    <input
-                      type="checkbox"
-                      checked={autoScroll}
-                      onChange={(e) => setAutoScroll(e.target.checked)}
-                      className="h-4 w-4 rounded border-border-primary bg-bg-secondary text-accent-primary"
-                    />
-                    Auto-scroll
-                  </label>
-                </div>
-                <div className="max-h-[500px] space-y-2 overflow-y-auto typo-body-sm">
-                  {transcriptEntries.map((entry, index) => (
-                    <div
-                      key={index}
-                      className={`rounded-lg p-3 transition-chill ${
-                        entry.highlighted
-                          ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
-                          : 'bg-bg-tertiary text-text-secondary'
-                      }`}
-                    >
-                      <span className="typo-caption text-text-tertiary">[{entry.timestamp}]</span>{' '}
-                      <span className={entry.highlighted ? 'font-medium' : ''}>{entry.text}</span>
-                    </div>
-                  ))}
+            <div className="flex flex-col rounded-xl border border-border-primary bg-bg-secondary p-4 shadow-chill-sm transition-chill">
+              <div className="mb-4 flex items-center justify-between flex-shrink-0">
+                <h3 className="typo-subtitle text-text-primary">Transcript</h3>
+                <label className="flex items-center gap-2 typo-body-sm text-text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={autoScroll}
+                    onChange={(e) => setAutoScroll(e.target.checked)}
+                    className="h-4 w-4 rounded border-border-primary bg-bg-secondary text-accent-primary"
+                  />
+                  Auto-scroll
+                </label>
+              </div>
+              <div className="flex-1 space-y-2 overflow-y-auto typo-body-sm min-h-0">
+                {transcriptEntries.map((entry, index) => (
+                  <div
+                    key={index}
+                    className={`rounded-lg p-3 transition-chill ${
+                      entry.highlighted
+                        ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
+                        : 'bg-bg-tertiary text-text-secondary'
+                    }`}
+                  >
+                    <span className="typo-caption text-text-tertiary">[{entry.timestamp}]</span>{' '}
+                    <span className={entry.highlighted ? 'font-medium' : ''}>{entry.text}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

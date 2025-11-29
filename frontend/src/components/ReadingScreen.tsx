@@ -1,466 +1,284 @@
-import { useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { fetchVideoByYoutubeId, type VideoRecord } from '../services/supabaseApi'
 
-type Sentence = {
-  id: string
-  text: string
-  translation: string
+type DictionaryEntry = {
+  word: string
+  pronunciation: string
+  partOfSpeech: string
+  definition: string
+  example: string
 }
 
-type Section = {
-  id: string
-  timestamp: string
-  label: string
-  sentences: Sentence[]
-}
-
-const readingSections: Section[] = [
-  {
-    id: 'intro',
-    timestamp: '0:15',
-    label: 'INTRO HOOK',
-    sentences: [
-      {
-        id: 's1',
-        text: 'This is the main content area where the full script of the video is displayed, formatted like an elegant article to keep you focused.',
-        translation: 'Đây là khu vực chính hiển thị toàn bộ transcript, được trình bày như một bài báo để bạn dễ tập trung.',
-      },
-      {
-        id: 's2',
-        text: 'When you tap on a sentence, it will highlight and a mini audio player appears so you can shadow the pronunciation immediately.',
-        translation: 'Khi bạn chạm vào một câu, câu đó sẽ được highlight và một mini player hiện ra để bạn luyện phát âm ngay lập tức.',
-      },
-    ],
+const dictionaryEntries: Record<string, DictionaryEntry> = {
+  innovation: {
+    word: 'innovation',
+    pronunciation: '/In.ə\'veI.ʃən/',
+    partOfSpeech: 'Noun',
+    definition: 'A new method, idea, product, etc.',
+    example: 'The company is known for its constant innovation in product design.',
   },
-  {
-    id: 'interaction',
-    timestamp: '0:32',
-    label: 'INTERACTIVE READING',
-    sentences: [
-      {
-        id: 's3',
-        text: 'Each word is a potential learning opportunity, so tapping on a tricky term like consumption instantly opens the dictionary drawer.',
-        translation: 'Mỗi từ đều là một cơ hội học, vì vậy khi chạm vào những từ khó như consumption, ngăn từ điển sẽ bật lên ngay.',
-      },
-      {
-        id: 's4',
-        text: 'You can save the definition to your flashcards, hear the audio, and keep the flow without leaving the reading zone.',
-        translation: 'Bạn có thể lưu nghĩa vào flashcard, nghe audio và tiếp tục đọc mà không rời khỏi màn hình.',
-      },
-    ],
-  },
-  {
-    id: 'focus',
-    timestamp: '0:58',
-    label: 'FOCUS TOOLS',
-    sentences: [
-      {
-        id: 's5',
-        text: 'Font controls, bilingual toggles, and the AI summary sit on top so the interface remains minimal but incredibly powerful.',
-        translation: 'Các điều khiển font, nút song ngữ và AI summary nằm phía trên để giao diện tối giản nhưng vẫn cực mạnh.',
-      },
-      {
-        id: 's6',
-        text: 'This focused environment keeps pronunciation, comprehension, and reviewing tools within a single pane.',
-        translation: 'Không gian tập trung này giữ mọi công cụ phát âm, đọc hiểu và ôn lại ngay trong một khung.',
-      },
-    ],
-  },
-  {
-    id: 'benefits',
-    timestamp: '1:12',
-    label: 'LEARNING BENEFITS',
-    sentences: [
-      {
-        id: 's7',
-        text: 'Learners move from passive consumption to active recall with confidence, guided by timestamps for quick navigation.',
-        translation: 'Người học chuyển từ tiếp nhận thụ động sang ghi nhớ chủ động đầy tự tin, được dẫn dắt bằng các mốc thời gian.',
-      },
-      {
-        id: 's8',
-        text: 'The result is a deeply effective and enjoyable language learning environment that feels as responsive as an AI chat.',
-        translation: 'Kết quả là môi trường học ngôn ngữ hiệu quả và thú vị, phản hồi nhanh như một cuộc trò chuyện với AI.',
-      },
-    ],
-  },
-]
-
-const summaryHighlights = [
-  'AI surfaces key insights from the video so you can skim before deep reading.',
-  'Frictionless dictionary lookups and flashcard saves keep momentum.',
-  'Timeline markers help you jump to any scene while staying in reading mode.',
-]
-
-const dictionaryEntries: Record<
-  string,
-  { type: string; pronunciation: string; meaning: string; example: string }
-> = {
-  consumption: {
-    type: 'NOUN',
-    pronunciation: '/kən\'sʌmp∫n/',
-    meaning: 'The action of using up a resource.',
-    example: 'Active listening replaces passive consumption of subtitles.',
-  },
-  pronunciation: {
-    type: 'noun',
-    pronunciation: '/prəˌnʌn.siˈeɪ.ʃən/',
-    meaning: 'The way in which a word or letter is said.',
-    example: 'Shadowing improves your pronunciation quickly.',
-  },
-  interface: {
-    type: 'noun',
-    pronunciation: '/ˈɪn.tə.feɪs/',
-    meaning: 'A system that enables separate elements to work together.',
-    example: 'The interface keeps controls close to the reading surface.',
-  },
-  summary: {
-    type: 'noun',
-    pronunciation: '/ˈsʌm.ər.i/',
-    meaning: 'A short statement of the main ideas of a text.',
-    example: 'Read the AI summary to preview the lesson.',
+  integrated: {
+    word: 'integrated',
+    pronunciation: '/ˈɪn.tə.ɡreɪ.tɪd/',
+    partOfSpeech: 'Adjective',
+    definition: 'Combined or coordinated into a functioning whole.',
+    example: 'The new system is fully integrated with existing software.',
   },
 }
-
-const timelineMarkers = readingSections.map((section) => ({
-  id: section.id,
-  time: section.timestamp,
-  label: section.label,
-  description: section.sentences[0]?.text.slice(0, 70).concat('…'),
-}))
-
-const tokenizeSentence = (sentence: string) => sentence.match(/\w+|[^\w\s]+|\s+/g) ?? [sentence]
 
 const ReadingScreen = () => {
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
-  const [fontSize, setFontSize] = useState<'md' | 'lg'>('md')
-  const [showTranslation, setShowTranslation] = useState(false)
-  const [showSummary, setShowSummary] = useState(true)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
-  const [activeSentenceId, setActiveSentenceId] = useState(readingSections[0].sentences[0].id)
-  const [autoSync, setAutoSync] = useState(true)
+  const [video, setVideo] = useState<VideoRecord | null>(null)
+  const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
 
-  const sentencesFlat = useMemo(
-    () => readingSections.flatMap((section) => section.sentences.map((sentence) => ({ ...sentence, sectionId: section.id }))),
-    []
-  )
+  useEffect(() => {
+    if (!videoId) return
 
-  const activeSentence = sentencesFlat.find((sentence) => sentence.id === activeSentenceId)
-  const activeSectionId = activeSentence?.sectionId
-  const selectedEntry = selectedWord ? dictionaryEntries[selectedWord] : undefined
+    const loadVideo = async () => {
+      try {
+        const videoData = await fetchVideoByYoutubeId(videoId)
+        setVideo(videoData)
+      } catch (error) {
+        console.error('Failed to load video data', error)
+      }
+    }
 
-  const handleSentenceSelect = (sentenceId: string) => {
-    setActiveSentenceId(sentenceId)
-  }
+    loadVideo()
+  }, [videoId])
 
-  const handleWordSelect = (word: string) => {
-    const normalized = word.toLowerCase()
+  // Đóng popup khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (selectedWord && !target.closest('[data-dictionary-popup]')) {
+        setSelectedWord(null)
+        setPopupPosition(null)
+      }
+    }
+
+    if (selectedWord) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [selectedWord])
+
+  const handleWordClick = (word: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    const normalized = word.toLowerCase().replace(/[^a-z]/g, '')
     if (dictionaryEntries[normalized]) {
       setSelectedWord(normalized)
-    } else {
-      setSelectedWord(null)
+      
+      // Tính toán vị trí popup gần từ được click
+      const buttonRect = event.currentTarget.getBoundingClientRect()
+      const popupWidth = 420
+      const popupHeight = 300 // Ước tính chiều cao
+      const spacing = 16
+      
+      // Ưu tiên hiển thị bên phải, nếu không đủ chỗ thì hiển thị bên trái
+      let left = buttonRect.right + spacing
+      if (left + popupWidth > window.innerWidth - 24) {
+        left = buttonRect.left - popupWidth - spacing
+      }
+      
+      // Ưu tiên hiển thị phía trên, nếu không đủ chỗ thì hiển thị phía dưới
+      let top = buttonRect.top - popupHeight / 2 + buttonRect.height / 2
+      if (top < 24) {
+        top = buttonRect.bottom + spacing
+      } else if (top + popupHeight > window.innerHeight - 24) {
+        top = window.innerHeight - popupHeight - 24
+      }
+      
+      setPopupPosition({ top, left })
     }
   }
 
-  const fontSizeClass = fontSize === 'lg' ? 'text-[18px]' : 'text-[16px]'
+
+  const handlePlayAudio = () => {
+    // TODO: Implement audio playback
+    console.log('Play audio for:', selectedWord)
+  }
+
+  const handleBookmark = () => {
+    // TODO: Implement bookmark functionality
+    console.log('Bookmark word:', selectedWord)
+  }
+
+  const selectedEntry = selectedWord ? dictionaryEntries[selectedWord] : null
+
+  // Tokenize text to identify words
+  const tokenizeText = (text: string) => {
+    return text.match(/\w+|[^\w\s]+|\s+/g) ?? [text]
+  }
+
+  const renderTextWithHighlights = (text: string) => {
+    const tokens = tokenizeText(text)
+    return tokens.map((token, index) => {
+      if (/^\s+$/.test(token)) {
+        return <span key={index}>{token}</span>
+      }
+
+      const normalized = token.toLowerCase().replace(/[^a-z]/g, '')
+      const hasDefinition = dictionaryEntries[normalized]
+      const isSelected = selectedWord === normalized
+
+      if (!hasDefinition) {
+        return <span key={index}>{token}</span>
+      }
+
+      return (
+        <button
+          key={index}
+          type="button"
+          onClick={(e) => handleWordClick(normalized, e)}
+          className={`inline transition-colors underline decoration-2 underline-offset-2 ${
+            isSelected
+              ? 'text-accent-primary font-semibold decoration-accent-primary'
+              : 'text-accent-primary hover:text-accent-primary-hover cursor-pointer decoration-accent-primary/60'
+          }`}
+        >
+          {token}
+        </button>
+      )
+    })
+  }
+
+  const formatDifficulty = (level: string | null): string => {
+    if (!level) return 'Intermediate English'
+    const levelMap: Record<string, string> = {
+      A1: 'Beginner English',
+      A2: 'Elementary English',
+      B1: 'Intermediate English',
+      B2: 'Upper Intermediate English',
+      C1: 'Advanced English',
+      C2: 'Proficiency English',
+      custom: 'Intermediate English',
+    }
+    return levelMap[level] || 'Intermediate English'
+  }
+
+  const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
 
   return (
-    <div className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,_1fr)_320px]">
-      <section className="flex flex-col rounded-2xl border border-border-primary bg-bg-secondary p-6 shadow-chill-lg transition-chill md:p-10">
-        {/* Navigation */}
-        <div className="mb-6 flex items-center gap-3">
+    <div className="flex flex-1 flex-col text-text-primary">
+      {/* Content Container - dùng padding mặc định của Layout */}
+      <div className="flex-1 pb-24 w-full">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-12 flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="text-text-tertiary hover:text-text-primary transition-colors"
+          >
+            Home
+          </button>
+          <span className="text-text-tertiary">/</span>
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-chill hover:text-accent-primary hover:bg-interactive-hover"
+            className="text-text-tertiary hover:text-text-primary transition-colors"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            {difficultyLabel}
           </button>
-          <span className="text-xs font-medium text-text-tertiary">BACK TO DASHBOARD</span>
+          <span className="text-text-tertiary">/</span>
+          <span className="text-text-primary">Reading Comprehension</span>
+        </nav>
+
+        {/* Main Content */}
+        {/* Title */}
+        <h1 className="typo-title text-center mb-16 leading-tight text-text-primary" style={{ fontSize: 'clamp(2rem, 1.8rem + 1vw, 2.8rem)' }}>
+          How AI is changing the future of creativity
+        </h1>
+
+        {/* Paragraphs */}
+        <div className="space-y-10">
+          {/* Paragraph 1 */}
+          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
+            Welcome to our deep dive into the evolving world of artificial intelligence. In this session, we'll explore the
+            groundbreaking ways AI is reshaping creative industries, from art and music to writing and design. We'll start by
+            looking at the history of AI in creative fields, tracing its roots from early experiments to the sophisticated
+            tools we have today.
+          </p>
+
+          {/* Paragraph 2 */}
+          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
+            Next, we'll discuss the current landscape. You'll see demonstrations of AI-powered tools that can generate
+            stunning visuals, compose original music, and even write compelling narratives. We'll analyze the technology
+            behind these tools and discuss their capabilities and limitations. Are they just mimicking human creativity, or
+            are they capable of genuine {renderTextWithHighlights('innovation')}? We'll hear from experts and artists who are
+            using these tools in their daily work.
+          </p>
+
+          {/* Paragraph 3 */}
+          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '1.8', textIndent: '2em' }}>
+            Finally, we will look to the future. What are the ethical considerations we need to address as AI becomes more{' '}
+            {renderTextWithHighlights('integrated')} into our creative processes? How will it impact jobs and the very
+            definition of what it means to be an artist? Join us as we navigate these exciting and challenging questions,
+            uncovering the incredible potential of AI to augment and expand human creativity.
+          </p>
         </div>
+      </div>
 
-        {/* Header */}
-        <header className="mb-8">
-          <p className="mb-4 typo-caption font-semibold text-text-tertiary">READING MODE</p>
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="typo-title text-text-primary">The Future of Personalized Learning</h1>
-              <p className="mt-3 max-w-2xl typo-body text-text-secondary">
-                Focused reading workspace with AI-powered lookups, audio snippets, and bilingual controls.
-              </p>
+      {/* Dictionary Definition Box */}
+      {selectedEntry && popupPosition && (
+        <div 
+          data-dictionary-popup
+          className="fixed w-[420px] max-w-[calc(100vw-3rem)] bg-bg-tertiary border border-border-primary rounded-2xl p-6 shadow-chill-dark z-50"
+          style={{ 
+            top: `${popupPosition.top}px`, 
+            left: `${popupPosition.left}px` 
+          }}
+        >
+          {/* Header with icons */}
+          <div className="flex items-start justify-between mb-5">
+            <div className="flex-1 pr-14">
+              <h3 className="text-3xl font-bold text-text-primary mb-2.5">{selectedEntry.word}</h3>
+              <p className="text-accent-primary text-base mb-1.5">{selectedEntry.pronunciation}</p>
+              <p className="text-text-primary text-sm font-medium">{selectedEntry.partOfSpeech}</p>
             </div>
-            <button
-              type="button"
-              className={`flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-chill whitespace-nowrap hover-scale ${
-                showSummary
-                  ? 'gradient-primary text-white shadow-glow-primary-light'
-                  : 'border border-border-primary text-text-primary hover:bg-interactive-hover hover:border-border-accent'
-              }`}
-              onClick={() => setShowSummary((prev) => !prev)}
-            >
-              <span>✨</span>
-              <span>AI Summary</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Metadata and Controls */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="rounded-full bg-accent-primary-light/20 px-3 py-1.5 typo-body-sm font-semibold text-accent-primary border border-accent-primary/20">Difficulty · B1</span>
-            <span className="typo-body-sm text-text-secondary">742 words · 6m 40s</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
-                fontSize === 'md'
-                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
-              }`}
-              onClick={() => setFontSize('md')}
-            >
-              Aa
-            </button>
-            <button
-              type="button"
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
-                fontSize === 'lg'
-                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
-              }`}
-              onClick={() => setFontSize('lg')}
-            >
-              A+
-            </button>
-            <button
-              type="button"
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-chill hover-scale ${
-                showTranslation
-                  ? 'border-accent-primary bg-accent-primary/10 text-accent-primary'
-                  : 'border-border-primary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
-              }`}
-              onClick={() => setShowTranslation((prev) => !prev)}
-            >
-              VI · EN
-            </button>
-          </div>
-        </div>
-
-        {showSummary && (
-          <div className="mb-8 rounded-xl border border-border-accent bg-bg-tertiary/60 p-5 shadow-chill-sm transition-chill">
-            <p className="mb-4 typo-caption font-semibold text-text-tertiary">QUICK DIGEST</p>
-            <ul className="space-y-3 typo-body-sm text-text-secondary">
-              {summaryHighlights.map((point) => (
-                <li key={point} className="flex items-start gap-3">
-                  <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary shadow-glow-primary-light" />
-                  <span>{point}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Reading Content */}
-        <div className="space-y-8">
-          {readingSections.map((section) => (
-            <div key={section.id} className="space-y-5">
-              <div className="flex items-center gap-3 typo-caption text-text-tertiary">
-                <span className="rounded-full border border-border-primary bg-bg-tertiary px-3 py-1 text-[10px] font-medium text-text-secondary">
-                  {section.timestamp}
-                </span>
-                <span className="font-semibold">{section.label}</span>
-              </div>
-              <div className="space-y-4">
-                {section.sentences.map((sentence) => {
-                  const tokens = tokenizeSentence(sentence.text)
-                  const isActive = sentence.id === activeSentenceId
-                  return (
-                    <div
-                      key={sentence.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleSentenceSelect(sentence.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault()
-                          handleSentenceSelect(sentence.id)
-                        }
-                      }}
-                      className={`cursor-pointer rounded-xl border-2 px-6 py-5 transition-chill hover-scale ${
-                        isActive
-                          ? 'border-border-accent bg-accent-primary-light/10 shadow-glow-primary-light'
-                          : 'border-transparent bg-transparent hover:bg-interactive-hover hover:border-border-primary'
-                      }`}
-                    >
-                      <p className={`typo-body text-left leading-relaxed text-text-primary ${fontSizeClass}`}>
-                        {tokens.map((token, index) => {
-                          if (/^\s+$/.test(token)) {
-                            return <span key={`${sentence.id}-${index}`}>{token}</span>
-                          }
-
-                          const normalized = token.toLowerCase().replace(/[^a-z]/g, '')
-                          const entry = dictionaryEntries[normalized]
-                          const isSelectedWord = selectedWord === normalized
-
-                          if (!entry) {
-                            return (
-                              <span key={`${sentence.id}-${index}`} className="inline">
-                                {token}
-                              </span>
-                            )
-                          }
-
-                          return (
-                            <button
-                              key={`${sentence.id}-${index}`}
-                              type="button"
-                              className={`relative inline-flex items-center rounded-md px-1.5 py-0.5 text-inherit transition-chill ${
-                                isSelectedWord ? 'bg-accent-primary-light/40 text-accent-primary font-medium' : 'hover:bg-interactive-hover hover:text-accent-primary'
-                              }`}
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                handleWordSelect(normalized)
-                              }}
-                            >
-                              {token}
-                            </button>
-                          )
-                        })}
-                      </p>
-                      {showTranslation && (
-                        <p className="mt-3 text-left typo-body-sm text-text-secondary">{sentence.translation}</p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {activeSentence && (
-          <div className="mt-8 rounded-xl border border-border-accent bg-bg-tertiary/80 p-5 typo-body-sm text-text-primary shadow-chill-md transition-chill">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex-1">
-                <p className="typo-caption text-text-tertiary">Mini Player</p>
-                <p className="mt-2 typo-body text-text-primary">{activeSentence.text}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="flex h-12 w-12 items-center justify-center rounded-lg border border-border-primary bg-bg-secondary text-lg transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
-                  ⏮
-                </button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-lg gradient-primary text-white text-xl shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary">
-                  ▶
-                </button>
-                <button className="flex h-12 w-12 items-center justify-center rounded-lg border border-border-primary bg-bg-secondary text-lg transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
-                  ⏭
-                </button>
-              </div>
-            </div>
-            <div className="mt-4 h-1.5 w-full rounded-full bg-border-divider overflow-hidden">
-              <div className="h-full rounded-full gradient-secondary transition-all duration-500" style={{ width: '62%' }} />
-            </div>
-          </div>
-        )}
-      </section>
-
-      <aside className="hidden rounded-2xl border border-border-primary bg-bg-secondary/90 p-6 typo-body-sm text-text-primary shadow-chill-sm lg:flex lg:flex-col">
-        <div className="mb-6 flex items-center justify-between">
-          <p className="typo-caption font-semibold text-text-tertiary">TIMESTAMPS</p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-tertiary">Auto-sync</span>
-            <button
-              type="button"
-              onClick={() => setAutoSync(!autoSync)}
-              className={`relative h-5 w-9 rounded-full transition-colors ${
-                autoSync ? 'bg-accent-primary' : 'bg-border-secondary'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-text-inverse transition-transform ${
-                  autoSync ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 space-y-3 overflow-y-auto">
-          {timelineMarkers.map((marker) => {
-            const isActive = marker.id === activeSectionId
-            return (
+            <div className="flex items-center gap-2.5 absolute top-6 right-6">
               <button
-                key={marker.id}
                 type="button"
-                className={`w-full rounded-xl border px-4 py-4 text-left transition-chill hover-scale ${
-                  isActive
-                    ? 'border-border-accent bg-accent-primary-light/20 shadow-chill-sm'
-                    : 'border-border-primary bg-bg-secondary hover:bg-interactive-hover hover:border-border-primary'
-                }`}
-                onClick={() => {
-                  const firstSentence = readingSections.find((section) => section.id === marker.id)?.sentences[0]
-                  if (firstSentence) {
-                    handleSentenceSelect(firstSentence.id)
-                  }
-                }}
+                onClick={handlePlayAudio}
+                className="p-2.5 text-text-primary hover:text-accent-primary hover:bg-interactive-hover rounded-lg transition-colors"
+                aria-label="Play pronunciation"
               >
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className={`h-4 w-4 ${isActive ? 'text-accent-primary' : 'text-text-tertiary'}`}
-                      fill="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    <span className="typo-body-sm font-medium text-text-secondary">{marker.time}</span>
-                  </div>
-                  {isActive && <span className="h-2 w-2 rounded-full bg-accent-secondary shadow-glow-primary-light" />}
-                </div>
-                <p className="typo-subtitle font-semibold text-text-primary">{marker.label}</p>
-                <p className="mt-1.5 typo-body-sm leading-relaxed text-text-secondary">{marker.description}</p>
-              </button>
-            )
-          })}
-        </div>
-      </aside>
-
-      {selectedEntry && (
-        <div className="fixed bottom-6 left-1/2 z-20 w-[min(480px,90vw)] -translate-x-1/2 rounded-2xl border border-border-accent bg-bg-secondary/95 p-6 backdrop-blur-xl shadow-chill-dark">
-          <div className="mb-4 flex items-start justify-between">
-            <div className="flex-1">
-              <div className="mb-2 flex items-center gap-3">
-                <h3 className="typo-title capitalize text-text-primary">{selectedWord}</h3>
-                <span className="rounded-lg bg-accent-primary-light/20 border border-accent-primary/30 px-2.5 py-1 typo-body-sm font-medium uppercase text-accent-primary">
-                  {selectedEntry.type}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                  />
                 </svg>
-                <p className="typo-body-sm text-text-secondary">{selectedEntry.pronunciation}</p>
-              </div>
+              </button>
+              <button
+                type="button"
+                onClick={handleBookmark}
+                className="p-2.5 text-text-primary hover:text-accent-primary hover:bg-interactive-hover rounded-lg transition-colors"
+                aria-label="Bookmark word"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setSelectedWord(null)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-text-tertiary transition-chill hover:bg-interactive-hover hover:text-text-primary"
-            >
-              ×
-            </button>
           </div>
-          <p className="mb-3 typo-body-sm text-text-secondary">{selectedEntry.meaning}</p>
-          <div className="mt-4 flex items-center gap-2">
-            <button className="flex flex-1 items-center justify-center gap-2 rounded-xl gradient-primary px-4 py-3 text-sm font-semibold text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary">
-              <span>➕</span> 
-              <span>Add to Flashcard</span>
-            </button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-xl border border-border-primary bg-bg-tertiary text-lg text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale">
-              🔊
-            </button>
+
+          {/* Definition */}
+          <p className="text-text-primary text-base mb-5 leading-relaxed">{selectedEntry.definition}</p>
+
+          {/* Example */}
+          <div className="border-l-2 border-accent-primary pl-5 pt-1">
+            <p className="text-text-primary italic text-base leading-relaxed">"{selectedEntry.example}"</p>
           </div>
         </div>
       )}
@@ -469,4 +287,3 @@ const ReadingScreen = () => {
 }
 
 export default ReadingScreen
-

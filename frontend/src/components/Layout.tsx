@@ -372,8 +372,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
         </section>
 
         {!showAppContent && !isAuthLoading && (
-          <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-3xl border border-border-primary bg-bg-secondary/95 px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.7)]">
+          <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="w-full max-w-md rounded-3xl border border-border-primary bg-bg-secondary px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.7)]">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-primary text-2xl text-text-inverse">
                 ★
               </div>
@@ -385,16 +385,16 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isAuthLoading || isLoginSubmitting}
-                className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-text-inverse px-4 py-3 text-sm font-semibold text-bg-primary shadow-[0_10px_40px_rgba(0,0,0,0.45)] transition hover:bg-[rgba(243,244,247,0.9)] disabled:cursor-wait disabled:bg-text-inverse/70"
+                className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-base font-semibold text-gray-900 shadow-[0_10px_40px_rgba(0,0,0,0.45)] transition-all hover:bg-gray-50 hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)] disabled:cursor-wait disabled:bg-gray-300 disabled:text-gray-500"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded bg-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded bg-white border border-gray-200">
                   {isLoginSubmitting ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#4285f4]/40 border-t-[#4285f4]" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#4285f4]/40 border-t-[#4285f4]" />
                   ) : (
-                    <span className="text-base font-bold text-[#4285f4]">G</span>
+                    <span className="text-lg font-bold text-[#4285f4]">G</span>
                   )}
                 </span>
-                <span>
+                <span className="text-gray-900">
                   {isAuthLoading
                     ? 'Đang kiểm tra phiên đăng nhập...'
                     : isLoginSubmitting
@@ -407,8 +407,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
         )}
 
         {showAppContent && isUserSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-2xl border border-border-primary bg-bg-secondary/95 px-6 py-5 text-left shadow-[0_20px_80px_rgba(0,0,0,0.7)]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/60">
+            <div className="w-full max-w-sm rounded-2xl border border-border-primary bg-bg-secondary px-6 py-5 text-left shadow-[0_20px_80px_rgba(0,0,0,0.7)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-sm font-semibold text-text-secondary">Tài khoản</div>
@@ -427,22 +427,22 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <button
                   type="button"
                   aria-label="Đóng"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-sm text-text-secondary hover:bg-white/10"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-interactive-hover text-sm text-text-secondary hover:bg-interactive-active transition-colors"
                   onClick={() => setIsUserSettingsOpen(false)}
                 >
                   ×
                 </button>
               </div>
 
-              <div className="mt-6 border-t border-white/5 pt-4">
+              <div className="mt-6 border-t border-border-divider pt-4">
                 {/* Sign out button */}
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="flex w-full items-center justify-between rounded-xl bg-bg-tertiary px-4 py-2.5 text-sm font-medium text-red-100 hover:bg-[rgba(248,113,113,0.08)]"
+                  className="flex w-full items-center justify-between rounded-xl bg-bg-tertiary px-4 py-2.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
                 >
                   <span>Đăng xuất</span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/10 text-xs text-red-200">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-error/10 text-xs text-error">
                     ⏻
                   </span>
                 </button>
