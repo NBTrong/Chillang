@@ -100,10 +100,15 @@ export const getCurrentUser = async () => {
 }
 
 export const signInWithGoogle = async () => {
+  // Use environment variable if set, otherwise use current origin
+  // For local development, make sure to add http://localhost:5173 (or your dev port)
+  // to Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+  const redirectTo = import.meta.env.VITE_AUTH_REDIRECT_URL || window.location.origin
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin,
+      redirectTo,
     },
   })
 

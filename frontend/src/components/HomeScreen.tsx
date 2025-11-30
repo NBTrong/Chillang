@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
@@ -18,12 +18,48 @@ type TranscriptResponse = {
   youtubeVideoId: string
 }
 
+const processingSteps: Array<'home.processingStep1' | 'home.processingStep2' | 'home.processingStep3' | 'home.processingStep4' | 'home.processingStep5' | 'home.processingStep6'> = [
+  'home.processingStep1',
+  'home.processingStep2',
+  'home.processingStep3',
+  'home.processingStep4',
+  'home.processingStep5',
+  'home.processingStep6',
+]
+
 const HomeScreen = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [videoUrl, setVideoUrl] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [processingStep, setProcessingStep] = useState(0)
+  const intervalRef = useRef<number | null>(null)
+
+  // Fake progress steps khi đang processing
+  useEffect(() => {
+    if (isProcessing) {
+      setProcessingStep(0)
+      intervalRef.current = setInterval(() => {
+        setProcessingStep((prev) => {
+          if (prev >= processingSteps.length - 1) return 0 // Loop lại từ đầu nếu đã đến bước cuối
+          return prev + 1
+        })
+      }, 3000) // Đổi step mỗi 2 giây
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      setProcessingStep(0)
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [isProcessing])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -117,7 +153,7 @@ const HomeScreen = () => {
 
           {isProcessing && (
             <div className="animate-pulse-chill text-sm font-medium text-accent-primary">
-              {t('home.processing')}
+              {t(processingSteps[processingStep])}
             </div>
           )}
 
