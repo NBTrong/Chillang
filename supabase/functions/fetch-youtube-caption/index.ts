@@ -92,6 +92,157 @@ const decodeHtmlEntities = (text: string): string => {
   return text.replace(/&#?\w+;/g, (match) => entities[match] || match)
 }
 
+type RapidApiKeyInfo = {
+  key_id: string
+  key_value: string
+  name: string | null
+  request_count: number
+  error_count: number
+}
+
+/**
+ * Get the least-used active RapidAPI key from the database
+ * Falls back to environment variable if no keys are found in database
+ */
+const getLeastUsedRapidApiKey = async (): Promise<{
+  key: string
+  keyId: string | null
+}> => {
+  try {
+    const { data, error } = await supabaseAdmin.rpc('get_least_used_rapidapi_key')
+
+    if (error) {
+      console.warn('[Key Rotation] Failed to get key from database:', error.message)
+      // Fallback to env variable
+      const envKey = Deno.env.get('RAPIDAPI_KEY')
+      if (envKey) {
+        return { key: envKey, keyId: null }
+      }
+      throw new Error('No RapidAPI key available')
+    }
+
+    if (data && Array.isArray(data) && data.length > 0) {
+      const keyInfo = data[0] as RapidApiKeyInfo
+      console.log(
+        `[Key Rotation] Using key "${keyInfo.name || keyInfo.key_id}" (requests: ${keyInfo.request_count}, errors: ${keyInfo.error_count})`,
+      )
+      return { key: keyInfo.key_value, keyId: keyInfo.key_id }
+    }
+
+    // No keys in database, fallback to env variable
+    console.log('[Key Rotation] No keys in database, using env variable')
+    const envKey = Deno.env.get('RAPIDAPI_KEY')
+    if (envKey) {
+      return { key: envKey, keyId: null }
+    }
+
+    throw new Error('No RapidAPI key available')
+  } catch (error) {
+    console.error('[Key Rotation] Error getting key:', error)
+    // Fallback to env variable
+    const envKey = Deno.env.get('RAPIDAPI_KEY')
+    if (envKey) {
+      return { key: envKey, keyId: null }
+    }
+    throw error
+  }
+}
+
+/**
+ * Track RapidAPI key usage and errors
+ */
+const trackRapidApiKeyUsage = async (
+  keyId: string | null,
+  success: boolean,
+  errorType: string | null = null,
+): Promise<void> => {
+  if (!keyId) {
+    // Can't track usage for env variable keys
+    return
+  }
+
+  try {
+    const { error } = await supabaseAdmin.rpc('track_rapidapi_key_usage', {
+      p_key_id: keyId,
+      p_success: success,
+      p_error_type: errorType,
+    })
+
+    if (error) {
+      console.warn('[Key Rotation] Failed to track usage:', error.message)
+    }
+  } catch (error) {
+    console.warn('[Key Rotation] Error tracking usage:', error)
+    // Don't throw - tracking is non-critical
+  }
+}
+
+/**
+ * Detect error type from HTTP response status
+ */
+const detectErrorType = (status: number): string | null => {
+  if (status === 401 || status === 403) {
+    return 'auth_error'
+  }
+  if (status === 429) {
+    return 'rate_limit'
+  }
+  if (status >= 500) {
+    return 'server_error'
+  }
+  return 'client_error'
+}
+
+/**
+ * Get next RapidAPI key to try, excluding already tried keys
+ */
+const getNextRapidApiKey = async (
+  triedKeyIds: Set<string | null>,
+): Promise<{ key: string; keyId: string | null } | null> => {
+  try {
+    // First, try to get a key from database that we haven't tried
+    if (triedKeyIds.size > 0) {
+      const triedIdsArray = Array.from(triedKeyIds).filter((id) => id !== null) as string[]
+      if (triedIdsArray.length > 0) {
+        // Get all active keys and filter out tried ones
+        const { data: allKeys } = await supabaseAdmin
+          .from('rapidapi_keys')
+          .select('id, key_value, name')
+          .eq('is_active', true)
+
+        if (allKeys) {
+          const untriedKey = allKeys.find((k) => !triedIdsArray.includes(k.id))
+          if (untriedKey) {
+            return { key: untriedKey.key_value, keyId: untriedKey.id }
+          }
+        }
+      }
+    }
+
+    // If no tried keys or all tried, get least used
+    const keyInfo = await getLeastUsedRapidApiKey()
+    if (keyInfo && !triedKeyIds.has(keyInfo.keyId)) {
+      return keyInfo
+    }
+
+    // Fallback to env variable if not tried
+    const envKey = Deno.env.get('RAPIDAPI_KEY')
+    if (envKey && !triedKeyIds.has(null)) {
+      return { key: envKey, keyId: null }
+    }
+
+    return null
+  } catch (error) {
+    console.error('[Key Rotation] Error getting next key:', error)
+    // Fallback to env variable
+    const envKey = Deno.env.get('RAPIDAPI_KEY')
+    if (envKey && !triedKeyIds.has(null)) {
+      return { key: envKey, keyId: null }
+    }
+    return null
+  }
+}
+
 const fetchTranscriptFromProvider1 = async (
   videoId: string,
   apiKey: string,
@@ -424,7 +575,6 @@ const fetchTranscriptFromProvider5 = async (
 
 const fetchTranscriptWithFallback = async (
   videoId: string,
-  apiKey: string,
 ): Promise<NormalizedTranscript & { providerUsed: string }> => {
   const providers: Array<{
     name: string
@@ -450,34 +600,94 @@ const fetchTranscriptWithFallback = async (
 
   console.log(`[Transcript] Random selected provider: ${primaryProvider.name}`)
 
-  try {
-    const result = await primaryProvider.fetch(videoId, apiKey)
-    return { ...result, providerUsed: primaryProvider.name }
-  } catch (primaryError) {
-    console.warn(
-      `[Transcript] Primary provider ${primaryProvider.name} failed:`,
-      primaryError instanceof Error ? primaryError.message : primaryError,
-    )
+  // Maximum number of keys to try per provider (prevent infinite loops)
+  const maxKeyAttempts = 5
+  const triedKeyIds = new Set<string | null>()
 
-    // Try remaining providers in order
-    for (const fallbackProvider of remainingProviders) {
-      console.log(`[Transcript] Trying fallback provider: ${fallbackProvider.name}`)
-      try {
-        const result = await fallbackProvider.fetch(videoId, apiKey)
-        return { ...result, providerUsed: fallbackProvider.name }
-      } catch (fallbackError) {
-        console.warn(
-          `[Transcript] Fallback provider ${fallbackProvider.name} failed:`,
-          fallbackError instanceof Error ? fallbackError.message : fallbackError,
-        )
-        // Continue to next provider
+  // Helper function to try fetching with a key
+  const tryFetchWithKey = async (
+    provider: { name: string; fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript> },
+    keyInfo: { key: string; keyId: string | null },
+  ): Promise<{ result: NormalizedTranscript | null; shouldRetry: boolean; errorType: string | null }> => {
+    try {
+      const result = await provider.fetch(videoId, keyInfo.key)
+      // Success - track usage
+      await trackRapidApiKeyUsage(keyInfo.keyId, true, null)
+      return { result, shouldRetry: false, errorType: null }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const statusMatch = errorMessage.match(/\((\d+)\)/)
+      const status = statusMatch ? parseInt(statusMatch[1], 10) : null
+      const errorType = status ? detectErrorType(status) : 'unknown_error'
+
+      // Track error
+      await trackRapidApiKeyUsage(keyInfo.keyId, false, errorType)
+
+      // Determine if we should retry with another key (rate limit or auth errors)
+      const shouldRetry = status === 429 || status === 401 || status === 403
+
+      return {
+        result: null,
+        shouldRetry,
+        errorType,
       }
     }
-
-    // All providers failed
-    console.error(`[Transcript] All providers failed for video ${videoId}`)
-    throw primaryError
   }
+
+  // Try all providers with key rotation
+  const allProviders = [primaryProvider, ...remainingProviders]
+
+  for (const provider of allProviders) {
+    console.log(`[Transcript] Trying provider: ${provider.name}`)
+
+    // Try multiple keys for this provider
+    let keyAttempts = 0
+    const providerTriedKeyIds = new Set<string | null>()
+
+    while (keyAttempts < maxKeyAttempts) {
+      keyAttempts++
+
+      // Get next key to try (excluding already tried keys for this provider)
+      const keyInfo = await getNextRapidApiKey(providerTriedKeyIds)
+
+      if (!keyInfo) {
+        // No more keys available
+        console.warn(`[Transcript] No more keys available for provider ${provider.name}`)
+        break
+      }
+
+      providerTriedKeyIds.add(keyInfo.keyId)
+      triedKeyIds.add(keyInfo.keyId)
+
+      console.log(
+        `[Transcript] Provider ${provider.name}, attempt ${keyAttempts}/${maxKeyAttempts} with key ${keyInfo.keyId || 'env'}`,
+      )
+
+      const fetchResult = await tryFetchWithKey(provider, keyInfo)
+
+      if (fetchResult.result) {
+        // Success!
+        return { ...fetchResult.result, providerUsed: provider.name }
+      }
+
+      if (!fetchResult.shouldRetry) {
+        // Non-retryable error (e.g., 404 - no caption), try next provider
+        console.warn(
+          `[Transcript] Provider ${provider.name} failed with non-retryable error: ${fetchResult.errorType}`,
+        )
+        break
+      }
+
+      // Retryable error (rate limit or auth), try next key
+      console.warn(
+        `[Transcript] Key ${keyInfo.keyId || 'env'} failed with ${fetchResult.errorType}, trying next key`,
+      )
+    }
+  }
+
+  // All providers and keys failed
+  console.error(`[Transcript] All providers and keys failed for video ${videoId}`)
+  throw new Error('All providers failed to fetch transcript')
 }
 
 const extractVocabularyWithGemini = async (
@@ -920,10 +1130,21 @@ serve(async (request) => {
       return jsonResponse(405, { error: 'Method not allowed' })
     }
 
-    const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
-    if (!rapidApiKey) {
-      console.error('Missing RAPIDAPI_KEY env')
-      return jsonResponse(500, { error: 'Server misconfiguration' })
+    // Check if we have at least one key source (database or env variable)
+    // The getLeastUsedRapidApiKey function will handle fallback to env variable
+    const envRapidApiKey = Deno.env.get('RAPIDAPI_KEY')
+    if (!envRapidApiKey) {
+      // Check if we have any keys in database
+      const { data: dbKeys } = await supabaseAdmin
+        .from('rapidapi_keys')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+
+      if (!dbKeys || dbKeys.length === 0) {
+        console.error('Missing RAPIDAPI_KEY env and no active keys in database')
+        return jsonResponse(500, { error: 'Server misconfiguration: No RapidAPI keys available' })
+      }
     }
 
     const geminiApiKey = Deno.env.get('GOOGLE_GEMINI_API_KEY')
@@ -950,7 +1171,7 @@ serve(async (request) => {
       return jsonResponse(400, { error: 'Invalid videoId' })
     }
 
-    const result = await fetchTranscriptWithFallback(videoId, rapidApiKey)
+    const result = await fetchTranscriptWithFallback(videoId)
 
     // Lấy title từ metadata, nếu không có thì tạo từ segments bằng Gemini
     let videoTitle = (result.metadata.title as string | undefined) ?? null
