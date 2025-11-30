@@ -77,7 +77,6 @@ const ListeningScreen = () => {
   const { t } = useTranslation()
   const { videoId } = useParams<{ videoId: string }>()
   const navigate = useNavigate()
-  const [autoScroll] = useState(true)
   const [showTranscript, setShowTranscript] = useState(true)
   
   // Data states
@@ -539,20 +538,6 @@ const ListeningScreen = () => {
             highlighted: index === highlightedIndex,
           }))
 
-          // Auto-scroll to highlighted entry
-          if (autoScroll && transcriptScrollRef.current && highlightedIndex >= 0) {
-            const highlightedElement = transcriptScrollRef.current.children[highlightedIndex] as HTMLElement
-            if (highlightedElement) {
-              console.log('Scrolling to highlighted segment:', highlightedIndex)
-              highlightedElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-              })
-            } else {
-              console.warn('Highlighted element not found at index:', highlightedIndex)
-            }
-          }
-
           return updated
         })
       } catch (error) {
@@ -567,7 +552,7 @@ const ListeningScreen = () => {
     return () => {
       clearInterval(intervalId)
     }
-  }, [autoScroll, isPlayerReady, video, transcriptEntries.length])
+  }, [isPlayerReady, video, transcriptEntries.length])
 
   // Handle answer selection
   const handleAnswerSelect = (questionId: string, answerIndex: number) => {

@@ -40,7 +40,7 @@ const generateListeningQuizWithGemini = async (
     return []
   }
 
-  const transcriptSample = transcript.slice(0, 10000)
+  const transcriptSample = transcript.slice(0, 5000)
   
   // Create a map of text to timestamps for reference
   const segmentMap = segments.map((seg) => ({

@@ -698,7 +698,7 @@ const extractVocabularyWithGemini = async (
     return []
   }
 
-  const transcriptSample = transcript.slice(0, 8000)
+  const transcriptSample = transcript.slice(0, 5000)
 
   const prompt = `Extract important vocabulary words from the following English transcript. Focus on:
 - Words that are likely unfamiliar to language learners
@@ -795,9 +795,10 @@ const generateTitleFromSegments = async (
     return null
   }
 
-  // Lấy khoảng 10 segment đầu tiên
+  // Lấy khoảng 10 segment đầu tiên, giới hạn tổng cộng 5000 ký tự
   const firstSegments = segments.slice(0, 10)
-  const segmentTexts = firstSegments.map((seg) => seg.subtitle).join(' ')
+  let segmentTexts = firstSegments.map((seg) => seg.subtitle).join(' ')
+  segmentTexts = segmentTexts.slice(0, 5000)
 
   if (!segmentTexts.trim()) {
     return null
@@ -962,7 +963,7 @@ const generateListeningQuizWithGemini = async (
     return []
   }
 
-  const transcriptSample = transcript.slice(0, 10000)
+  const transcriptSample = transcript.slice(0, 5000)
   
   // Create a map of text to timestamps for reference
   const segmentMap = segments.map((seg) => ({
