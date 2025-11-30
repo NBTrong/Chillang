@@ -28,3 +28,4 @@ with check (false);
 -- - The functions get_least_used_rapidapi_key() and track_rapidapi_key_usage() use SECURITY DEFINER
 --   which means they run with the privileges of the function owner (service role), so they will work correctly
 
+

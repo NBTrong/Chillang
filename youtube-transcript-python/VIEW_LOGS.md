@@ -70,3 +70,4 @@ gcloud services enable logging.googleapis.com
 - Kiểm tra region có đúng không: `asia-southeast1`
 - Kiểm tra service name: `youtube-transcript-python`
 
+

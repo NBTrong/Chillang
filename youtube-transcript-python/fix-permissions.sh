@@ -77,3 +77,4 @@ sleep 10
 echo -e "${GREEN}✅ Done! You can now try deploying again:${NC}"
 echo -e "  ${YELLOW}./deploy.sh YOUR_API_KEY ${PROJECT_ID} asia-southeast1${NC}\n"
 
+

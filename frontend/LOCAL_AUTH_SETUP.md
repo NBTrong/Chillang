@@ -58,3 +58,4 @@ VITE_AUTH_REDIRECT_URL=http://localhost:5173
 - Đảm bảo URL trong Redirect URLs khớp chính xác với URL bạn đang dùng (bao gồm http/https, port, trailing slash)
 - Kiểm tra Google OAuth Console nếu bạn tự cấu hình OAuth client
 
+

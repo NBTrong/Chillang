@@ -303,3 +303,4 @@ curl -X POST https://YOUR_SERVICE_URL/transcript \
 gcloud logging tail "resource.type=cloud_run_revision AND resource.labels.service_name=youtube-transcript-python"
 ```
 
+
