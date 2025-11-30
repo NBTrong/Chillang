@@ -1,0 +1,13 @@
+{
+  "name": "self-learn",
+  "version": "1.0.0",
+  "description": "Tube Study App - Self Learning Platform",
+  "scripts": {
+    "deploy:supabase": "./deploy-supabase.sh",
+    "deploy:supabase:function": "./deploy-supabase.sh",
+    "deploy:fetch-caption": "./deploy-supabase.sh fetch-youtube-caption",
+    "deploy:generate-questions": "./deploy-supabase.sh generate-more-questions"
+  },
+  "private": true
+}
+

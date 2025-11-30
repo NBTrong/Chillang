@@ -306,8 +306,89 @@ const fetchTranscriptFromProvider4 = async (
     if (response.status === 401) {
       throw new Error('Python provider authentication failed')
     }
+    if (response.status === 503) {
+      // Service unavailable (e.g., bot detection) - should fallback to other providers
+      const errorText = await response.text().catch(() => 'Service unavailable')
+      console.warn(`[Transcript] Python provider unavailable (bot detection?): ${errorText}`)
+      throw new Error(`Python provider temporarily unavailable: ${errorText}`)
+    }
     const errorText = await response.text().catch(() => 'Unknown error')
     throw new Error(`Provider 4 (Python) request failed (${response.status}): ${errorText}`)
+  }
+
+  const payload = (await response.json()) as PythonProviderResponse
+
+  if (!payload.transcript || !payload.transcript.trim()) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  if (!payload.segments || payload.segments.length === 0) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  const decodedSegments = payload.segments.map((seg) => ({
+    subtitle: decodeHtmlEntities(seg.subtitle),
+    start: seg.start,
+    dur: seg.dur,
+  }))
+
+  return {
+    transcript: payload.transcript,
+    language: payload.language ?? null,
+    segments: decodedSegments,
+    metadata: {
+      provider: 'python-yt-dlp',
+      title: payload.metadata.title,
+      description: payload.metadata.description,
+      lengthInSeconds: payload.metadata.lengthInSeconds,
+      thumbnails: payload.metadata.thumbnails,
+      availableLangs: payload.metadata.availableLangs,
+    },
+  }
+}
+
+const fetchTranscriptFromProvider5 = async (
+  videoId: string,
+  apiKey: string,
+): Promise<NormalizedTranscript> => {
+  const pythonApiUrl = Deno.env.get('PYTHON_TRANSCRIPT_API_URL')
+  const pythonApiKey = Deno.env.get('PYTHON_TRANSCRIPT_API_KEY')
+
+  if (!pythonApiUrl) {
+    throw new Error('PYTHON_TRANSCRIPT_API_URL not configured')
+  }
+
+  if (!pythonApiKey) {
+    throw new Error('PYTHON_TRANSCRIPT_API_KEY not configured')
+  }
+
+  const url = `${pythonApiUrl}/transcript`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      video_id: videoId,
+      api_key: pythonApiKey,
+    }),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(NO_CAPTION_ERROR)
+    }
+    if (response.status === 401) {
+      throw new Error('Python provider 5 authentication failed')
+    }
+    if (response.status === 503) {
+      // Service unavailable (e.g., bot detection) - should fallback to other providers
+      const errorText = await response.text().catch(() => 'Service unavailable')
+      console.warn(`[Transcript] Python provider 5 unavailable (bot detection?): ${errorText}`)
+      throw new Error(`Python provider 5 temporarily unavailable: ${errorText}`)
+    }
+    const errorText = await response.text().catch(() => 'Unknown error')
+    throw new Error(`Provider 5 (Python) request failed (${response.status}): ${errorText}`)
   }
 
   const payload = (await response.json()) as PythonProviderResponse
@@ -350,10 +431,18 @@ const fetchTranscriptWithFallback = async (
     fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript>
   }> = [
     // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
-    { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
+    // { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
     // { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
-    { name: 'python-yt-dlp', fetch: fetchTranscriptFromProvider4 },
+    // { name: 'python-yt-dlp', fetch: fetchTranscriptFromProvider4 },
+    { name: 'python-yt-dlp-2', fetch: fetchTranscriptFromProvider5 },
   ]
+
+  // // Add provider 5 only if environment variables are configured
+  // const pythonApiUrl2 = Deno.env.get('PYTHON_TRANSCRIPT_API_URL')
+  // const pythonApiKey2 = Deno.env.get('PYTHON_TRANSCRIPT_API_KEY')
+  // if (pythonApiUrl2 && pythonApiKey2) {
+  //   providers.push({ name: 'python-yt-dlp-2', fetch: fetchTranscriptFromProvider5 })
+  // }
 
   const randomIndex = Math.floor(Math.random() * providers.length)
   const primaryProvider = providers[randomIndex]

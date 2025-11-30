@@ -4,13 +4,27 @@ Python service để extract transcript từ YouTube video sử dụng yt-dlp, d
 
 ## Setup Local Development
 
-### 1. Install dependencies
+### 1. Create virtual environment (Recommended)
 
 ```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+```
+
+### 2. Install dependencies
+
+```bash
+# Make sure virtual environment is activated
 pip install -r requirements.txt
 ```
 
-### 2. Set environment variables
+### 3. Set environment variables
 
 ```bash
 export API_KEY=your-secret-api-key
@@ -18,7 +32,14 @@ export REQUIRE_API_KEY=true
 export PORT=8000
 ```
 
-### 3. Run locally
+Hoặc tạo file `.env`:
+
+```bash
+cp env.example .env
+# Edit .env and add your values
+```
+
+### 4. Run locally
 
 ```bash
 python main.py
@@ -28,6 +49,12 @@ Hoặc với uvicorn:
 
 ```bash
 uvicorn main:app --reload --port 8000
+```
+
+### 5. Deactivate virtual environment (when done)
+
+```bash
+deactivate
 ```
 
 ## API Usage
@@ -76,7 +103,56 @@ curl -X POST http://localhost:8000/transcript/dQw4w9WgXcQ \
 
 ## Deploy to Google Cloud Run
 
-### 1. Build Docker image
+> 📖 **Xem hướng dẫn chi tiết**: [CLOUD_RUN_SETUP.md](./CLOUD_RUN_SETUP.md)
+
+### Quick Start với .env file (Khuyên dùng)
+
+```bash
+# 1. Tạo file .env từ template
+cp env.example .env
+
+# 2. Chỉnh sửa .env và thêm API_KEY, PROJECT_ID
+nano .env
+# Hoặc
+# echo "API_KEY=your-secret-api-key" > .env
+# echo "PROJECT_ID=your-project-id" >> .env
+
+# 3. Deploy (script sẽ tự động đọc từ .env)
+cd youtube-transcript-python
+./deploy.sh
+```
+
+### Quick Start với command line arguments
+
+```bash
+# Di chuyển vào thư mục
+cd youtube-transcript-python
+
+# Deploy với arguments
+./deploy.sh YOUR_API_KEY YOUR_PROJECT_ID asia-southeast1
+```
+
+### Deploy thủ công (không dùng script)
+
+```bash
+# Di chuyển vào thư mục
+cd youtube-transcript-python
+
+# Deploy trực tiếp từ source code
+gcloud run deploy youtube-transcript-python \
+  --source . \
+  --region asia-southeast1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --memory 512Mi \
+  --cpu 1 \
+  --timeout 300 \
+  --min-instances 0 \
+  --max-instances 10 \
+  --set-env-vars API_KEY=your-secret-api-key-here,REQUIRE_API_KEY=true
+```
+
+### 1. Build Docker image (Optional)
 
 ```bash
 docker build -t youtube-transcript-python .
@@ -102,7 +178,7 @@ gcloud config set project YOUR_PROJECT_ID
 # Build and deploy
 gcloud run deploy youtube-transcript-python \
   --source . \
-  --region us-central1 \
+  --region asia-southeast1 \
   --platform managed \
   --allow-unauthenticated \
   --memory 512Mi \
@@ -131,7 +207,7 @@ steps:
       - '--image'
       - 'gcr.io/$PROJECT_ID/youtube-transcript-python'
       - '--region'
-      - 'us-central1'
+      - 'asia-southeast1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
