@@ -431,10 +431,10 @@ const fetchTranscriptWithFallback = async (
     fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript>
   }> = [
     // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
-    // { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
+    { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
     // { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
     // { name: 'python-yt-dlp', fetch: fetchTranscriptFromProvider4 },
-    { name: 'python-yt-dlp-2', fetch: fetchTranscriptFromProvider5 },
+    // { name: 'python-yt-dlp-2', fetch: fetchTranscriptFromProvider5 },
   ]
 
   // // Add provider 5 only if environment variables are configured
