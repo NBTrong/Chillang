@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   fetchVideoByYoutubeId,
   fetchStudySessionByVideoId,
-  fetchDictationPrompts,
+  fetchReadingSegments,
   updateStudySession,
   type VideoRecord,
   type StudySessionRecord,
-  type DictationPrompt,
+  type ReadingSegment,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
 
@@ -58,7 +58,7 @@ const DictationScreen = () => {
   // Data states
   const [video, setVideo] = useState<VideoRecord | null>(null)
   const [session, setSession] = useState<StudySessionRecord | null>(null)
-  const [prompts, setPrompts] = useState<DictationPrompt[]>([])
+  const [segments, setSegments] = useState<ReadingSegment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -108,9 +108,9 @@ const DictationScreen = () => {
         }
         setSession(sessionData)
 
-        // Fetch dictation prompts
-        const promptsData = await fetchDictationPrompts(sessionData.id)
-        setPrompts(promptsData)
+        // Fetch reading segments (used for dictation)
+        const segmentsData = await fetchReadingSegments(videoData.id)
+        setSegments(segmentsData)
       } catch (err) {
         console.error('Failed to load data:', err)
         setError(t('errors.dataLoadError'))
@@ -210,12 +210,12 @@ const DictationScreen = () => {
     }
   }, [video])
 
-  // Play audio when prompt changes
+  // Play audio when segment changes
   useEffect(() => {
-    if (!isPlayerReady || !youtubePlayerRef.current || prompts.length === 0) return
+    if (!isPlayerReady || !youtubePlayerRef.current || segments.length === 0) return
 
-    const currentPrompt = prompts[currentPromptIndex]
-    if (!currentPrompt) return
+    const currentSegment = segments[currentPromptIndex]
+    if (!currentSegment) return
 
     // Clear any existing time check interval
     if (timeCheckIntervalRef.current) {
@@ -223,29 +223,9 @@ const DictationScreen = () => {
       timeCheckIntervalRef.current = null
     }
 
-    // Get start and end time from context
-    let startTime = 0
-    let endTime: number | null = null
-    
-    if (currentPrompt.context && typeof currentPrompt.context === 'object') {
-      if ('start_time' in currentPrompt.context) {
-        const time = currentPrompt.context.start_time
-        if (typeof time === 'number') {
-          startTime = time
-        } else if (typeof time === 'string') {
-          startTime = parseFloat(time) || 0
-        }
-      }
-      
-      if ('end_time' in currentPrompt.context) {
-        const time = currentPrompt.context.end_time
-        if (typeof time === 'number') {
-          endTime = time
-        } else if (typeof time === 'string') {
-          endTime = parseFloat(time) || null
-        }
-      }
-    }
+    // Get start and end time from segment (convert ms to seconds)
+    const startTime = currentSegment.starts_at_ms ? currentSegment.starts_at_ms / 1000 : 0
+    const endTime = currentSegment.ends_at_ms ? currentSegment.ends_at_ms / 1000 : null
 
     // Seek to start time and play
     try {
@@ -268,8 +248,11 @@ const DictationScreen = () => {
               
               try {
                 const currentTime = youtubePlayerRef.current.getCurrentTime()
-                if (currentTime >= endTime!) {
+                // Pause slightly before end time to ensure we don't go past it
+                if (currentTime >= endTime! - 0.1) {
                   youtubePlayerRef.current.pauseVideo()
+                  // Seek back to end time to ensure we're exactly at the end
+                  youtubePlayerRef.current.seekTo(endTime, true)
                   if (timeCheckIntervalRef.current) {
                     clearInterval(timeCheckIntervalRef.current)
                     timeCheckIntervalRef.current = null
@@ -282,7 +265,7 @@ const DictationScreen = () => {
                   timeCheckIntervalRef.current = null
                 }
               }
-            }, 100) // Check every 100ms
+            }, 50) // Check every 50ms for more precise control
           }
         }
       }, 100)
@@ -290,16 +273,16 @@ const DictationScreen = () => {
       console.error('Error playing video:', error)
     }
 
-    // Cleanup interval on unmount or prompt change
+    // Cleanup interval on unmount or segment change
     return () => {
       if (timeCheckIntervalRef.current) {
         clearInterval(timeCheckIntervalRef.current)
         timeCheckIntervalRef.current = null
       }
     }
-  }, [isPlayerReady, currentPromptIndex, prompts])
+  }, [isPlayerReady, currentPromptIndex, segments])
 
-  // Reset state when prompt changes
+  // Reset state when segment changes
   useEffect(() => {
     setUserInput('')
     setFeedback(null)
@@ -312,9 +295,9 @@ const DictationScreen = () => {
     }, 100)
   }, [currentPromptIndex])
 
-  const currentPrompt = prompts[currentPromptIndex]
-  const totalPrompts = prompts.length
-  const progress = totalPrompts > 0 ? ((currentPromptIndex + 1) / totalPrompts) * 100 : 0
+  const currentSegment = segments[currentPromptIndex]
+  const totalSegments = segments.length
+  const progress = totalSegments > 0 ? ((currentPromptIndex + 1) / totalSegments) * 100 : 0
 
   // Normalize text for comparison
   const normalizeText = (text: string): string => {
@@ -353,7 +336,8 @@ const DictationScreen = () => {
   }
 
   const handleReplay = useCallback(() => {
-    if (!isPlayerReady || !youtubePlayerRef.current || !currentPrompt) return
+    const currentSegment = segments[currentPromptIndex]
+    if (!isPlayerReady || !youtubePlayerRef.current || !currentSegment) return
 
     // Clear any existing time check interval
     if (timeCheckIntervalRef.current) {
@@ -361,29 +345,9 @@ const DictationScreen = () => {
       timeCheckIntervalRef.current = null
     }
 
-    // Get start and end time from context
-    let startTime = 0
-    let endTime: number | null = null
-    
-    if (currentPrompt.context && typeof currentPrompt.context === 'object') {
-      if ('start_time' in currentPrompt.context) {
-        const time = currentPrompt.context.start_time
-        if (typeof time === 'number') {
-          startTime = time
-        } else if (typeof time === 'string') {
-          startTime = parseFloat(time) || 0
-        }
-      }
-      
-      if ('end_time' in currentPrompt.context) {
-        const time = currentPrompt.context.end_time
-        if (typeof time === 'number') {
-          endTime = time
-        } else if (typeof time === 'string') {
-          endTime = parseFloat(time) || null
-        }
-      }
-    }
+    // Get start and end time from segment (convert ms to seconds)
+    const startTime = currentSegment.starts_at_ms ? currentSegment.starts_at_ms / 1000 : 0
+    const endTime = currentSegment.ends_at_ms ? currentSegment.ends_at_ms / 1000 : null
 
     try {
       youtubePlayerRef.current.seekTo(startTime, true)
@@ -404,8 +368,11 @@ const DictationScreen = () => {
               
               try {
                 const currentTime = youtubePlayerRef.current.getCurrentTime()
-                if (currentTime >= endTime!) {
+                // Pause slightly before end time to ensure we don't go past it
+                if (currentTime >= endTime! - 0.1) {
                   youtubePlayerRef.current.pauseVideo()
+                  // Seek back to end time to ensure we're exactly at the end
+                  youtubePlayerRef.current.seekTo(endTime, true)
                   if (timeCheckIntervalRef.current) {
                     clearInterval(timeCheckIntervalRef.current)
                     timeCheckIntervalRef.current = null
@@ -418,20 +385,20 @@ const DictationScreen = () => {
                   timeCheckIntervalRef.current = null
                 }
               }
-            }, 100) // Check every 100ms
+            }, 50) // Check every 50ms for more precise control
           }
         }
       }, 100)
     } catch (error) {
       console.error('Error replaying video:', error)
     }
-  }, [isPlayerReady, currentPrompt])
+  }, [isPlayerReady, currentPromptIndex, segments])
 
   const handleCheckAnswer = async () => {
-    if (!currentPrompt || !userInput.trim()) return
+    if (!currentSegment || !userInput.trim()) return
 
     const userText = userInput.trim()
-    const correctText = currentPrompt.expected_text.trim()
+    const correctText = currentSegment.original_text.trim()
 
     const wordComparisons = compareTexts(userText, correctText)
     const fullyCorrect = wordComparisons.every(w => w.isCorrect) && 
@@ -468,13 +435,13 @@ const DictationScreen = () => {
   }
 
   const handleNext = () => {
-    if (currentPromptIndex < totalPrompts - 1) {
+    if (currentPromptIndex < totalSegments - 1) {
       setCurrentPromptIndex(currentPromptIndex + 1)
     }
   }
 
   const handleSkip = () => {
-    if (currentPromptIndex < totalPrompts - 1) {
+    if (currentPromptIndex < totalSegments - 1) {
       setCurrentPromptIndex(currentPromptIndex + 1)
     }
   }
@@ -595,8 +562,8 @@ const DictationScreen = () => {
     )
   }
 
-  // Empty state when no prompts
-  if (prompts.length === 0) {
+  // Empty state when no segments
+  if (segments.length === 0) {
     return (
       <div className="flex flex-1 flex-col text-text-primary">
         <div className="flex flex-1 flex-col overflow-auto">
@@ -642,7 +609,7 @@ const DictationScreen = () => {
     )
   }
 
-  const isLastPrompt = currentPromptIndex === totalPrompts - 1
+  const isLastSegment = currentPromptIndex === totalSegments - 1
 
   return (
     <div className="flex flex-1 flex-col text-text-primary">
@@ -692,7 +659,7 @@ const DictationScreen = () => {
           {/* Progress Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between typo-body-sm text-text-secondary">
-              <span className="font-medium">{t('dictation.question')} {currentPromptIndex + 1}/{totalPrompts}</span>
+              <span className="font-medium">{t('dictation.question')} {currentPromptIndex + 1}/{totalSegments}</span>
               <span className="text-xs text-text-tertiary">
                 Cmd+Shift: {t('dictation.replay')} • Enter: {t('dictation.checkAnswer')}
               </span>
@@ -706,7 +673,7 @@ const DictationScreen = () => {
           </div>
 
           {/* Completion Message */}
-          {isLastPrompt && showFeedback && feedback?.isFullyCorrect && (
+          {isLastSegment && showFeedback && feedback?.isFullyCorrect && (
             <div className="rounded-xl border border-accent-secondary bg-accent-secondary/10 p-4 text-center shadow-chill-md">
               <p className="typo-title text-accent-secondary mb-2">{t('dictation.completed')}</p>
               <p className="typo-body text-text-secondary">
@@ -724,7 +691,7 @@ const DictationScreen = () => {
                 onChange={handleInputChange}
                 onKeyDown={handleTextareaKeyDown}
                 placeholder={t('dictation.inputPlaceholder')}
-                disabled={showFeedback && isAnswerChecked && isCorrect && !isLastPrompt}
+                disabled={showFeedback && isAnswerChecked && isCorrect && !isLastSegment}
                 className="w-full resize-none bg-transparent typo-subtitle text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
                 rows={4}
               />
@@ -762,9 +729,9 @@ const DictationScreen = () => {
                 <button
                   type="button"
                   onClick={handleSkip}
-                  disabled={isLastPrompt}
+                  disabled={isLastSegment}
                   className={`flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale ${
-                    isLastPrompt ? 'opacity-50 cursor-not-allowed' : ''
+                    isLastSegment ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label={t('dictation.skip')}
                   title={t('dictation.skip')}
@@ -795,18 +762,18 @@ const DictationScreen = () => {
           {/* Feedback Section */}
           {showFeedback && feedback && (
             <div className="space-y-3 rounded-xl border border-border-accent bg-bg-secondary p-4 shadow-chill-md transition-chill">
-              {feedback.isFullyCorrect && (
+              {/* {feedback.isFullyCorrect && (
                 <div className="rounded-lg border border-accent-secondary bg-accent-secondary/10 p-3 mb-3">
                   <p className="typo-body-sm font-semibold text-accent-secondary">
                     {t('dictation.correct')}
                   </p>
-                  {!isLastPrompt && (
+                  {!isLastSegment && (
                     <p className="typo-body-sm text-text-tertiary mt-2">
                       {t('dictation.nextQuestion')}
                     </p>
                   )}
                 </div>
-              )}
+              )} */}
               {/* {!feedback.isFullyCorrect && (
                 <div className="rounded-lg border border-error/30 bg-error/5 p-3 mb-3">
                   <p className="typo-body-sm font-semibold text-error">
@@ -830,7 +797,7 @@ const DictationScreen = () => {
           )}
 
           {/* Action Buttons */}
-          {isAnswerChecked && isCorrect && !isLastPrompt && (
+          {/* {isAnswerChecked && isCorrect && !isLastSegment && (
             <div className="flex justify-end">
               <button
                 type="button"
@@ -840,8 +807,8 @@ const DictationScreen = () => {
                 {t('dictation.nextQuestion')}
               </button>
             </div>
-          )}
-          {isAnswerChecked && isCorrect && isLastPrompt && (
+          )} */}
+          {isAnswerChecked && isCorrect && isLastSegment && (
             <div className="flex justify-end">
               <button
                 type="button"

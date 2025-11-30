@@ -53,7 +53,7 @@ type NormalizedTranscript = {
     dur: number
   }>
   metadata: {
-    provider: 'youtube-transcriptor' | 'youtube-v2' | 'yt-api'
+    provider: 'youtube-transcriptor' | 'youtube-v2' | 'yt-api' | 'python-yt-dlp'
     [key: string]: unknown
   }
 }
@@ -253,6 +253,94 @@ const fetchTranscriptFromProvider3 = async (
   }
 }
 
+type PythonProviderResponse = {
+  transcript: string
+  language: string | null
+  segments: Array<{
+    subtitle: string
+    start: number
+    dur: number
+  }>
+  metadata: {
+    provider: 'python-yt-dlp'
+    title?: string
+    description?: string
+    lengthInSeconds?: string
+    thumbnails?: Array<{ url: string; width: number; height: number }>
+    availableLangs?: string[]
+    [key: string]: unknown
+  }
+}
+
+const fetchTranscriptFromProvider4 = async (
+  videoId: string,
+  apiKey: string,
+): Promise<NormalizedTranscript> => {
+  const pythonApiUrl = Deno.env.get('PYTHON_TRANSCRIPT_API_URL')
+  const pythonApiKey = Deno.env.get('PYTHON_TRANSCRIPT_API_KEY')
+
+  if (!pythonApiUrl) {
+    throw new Error('PYTHON_TRANSCRIPT_API_URL not configured')
+  }
+
+  if (!pythonApiKey) {
+    throw new Error('PYTHON_TRANSCRIPT_API_KEY not configured')
+  }
+
+  const url = `${pythonApiUrl}/transcript`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      video_id: videoId,
+      api_key: pythonApiKey,
+    }),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(NO_CAPTION_ERROR)
+    }
+    if (response.status === 401) {
+      throw new Error('Python provider authentication failed')
+    }
+    const errorText = await response.text().catch(() => 'Unknown error')
+    throw new Error(`Provider 4 (Python) request failed (${response.status}): ${errorText}`)
+  }
+
+  const payload = (await response.json()) as PythonProviderResponse
+
+  if (!payload.transcript || !payload.transcript.trim()) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  if (!payload.segments || payload.segments.length === 0) {
+    throw new Error(NO_CAPTION_ERROR)
+  }
+
+  const decodedSegments = payload.segments.map((seg) => ({
+    subtitle: decodeHtmlEntities(seg.subtitle),
+    start: seg.start,
+    dur: seg.dur,
+  }))
+
+  return {
+    transcript: payload.transcript,
+    language: payload.language ?? null,
+    segments: decodedSegments,
+    metadata: {
+      provider: 'python-yt-dlp',
+      title: payload.metadata.title,
+      description: payload.metadata.description,
+      lengthInSeconds: payload.metadata.lengthInSeconds,
+      thumbnails: payload.metadata.thumbnails,
+      availableLangs: payload.metadata.availableLangs,
+    },
+  }
+}
+
 const fetchTranscriptWithFallback = async (
   videoId: string,
   apiKey: string,
@@ -264,6 +352,7 @@ const fetchTranscriptWithFallback = async (
     // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
     { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
     // { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
+    { name: 'python-yt-dlp', fetch: fetchTranscriptFromProvider4 },
   ]
 
   const randomIndex = Math.floor(Math.random() * providers.length)
@@ -840,25 +929,36 @@ serve(async (request) => {
 
     await supabaseAdmin.from('reading_segments').delete().eq('video_id', videoRecord.id)
     if (result.segments.length > 0) {
-      const segmentsPayload = result.segments
-        .filter((segment) => segment.subtitle?.trim().length)
-        .map((segment, index) => {
-          const startsAtMs =
-            typeof segment.start === 'number' ? Math.round(segment.start * 1000) : null
-          const endsAtMs =
-            typeof segment.start === 'number' && typeof segment.dur === 'number'
-              ? Math.round((segment.start + segment.dur) * 1000)
-              : null
-
-          return {
-            video_id: videoRecord.id,
-            segment_index: index,
-            starts_at_ms: startsAtMs,
-            ends_at_ms: endsAtMs,
-            original_text: segment.subtitle,
-            translated_text: null,
+      const filteredSegments = result.segments.filter((segment) => segment.subtitle?.trim().length)
+      
+      const segmentsPayload = filteredSegments.map((segment, index) => {
+        const startsAtMs =
+          typeof segment.start === 'number' ? Math.round(segment.start * 1000) : null
+        
+        // ends_at_ms của segment N = starts_at_ms của segment N+1
+        // Nếu không có segment tiếp theo, dùng start + duration làm fallback
+        let endsAtMs: number | null = null
+        if (index < filteredSegments.length - 1) {
+          const nextSegment = filteredSegments[index + 1]
+          if (typeof nextSegment.start === 'number') {
+            endsAtMs = Math.round(nextSegment.start * 1000)
           }
-        })
+        }
+        
+        // Fallback: nếu không có segment tiếp theo, dùng start + duration
+        if (endsAtMs === null && typeof segment.start === 'number' && typeof segment.dur === 'number') {
+          endsAtMs = Math.round((segment.start + segment.dur) * 1000)
+        }
+
+        return {
+          video_id: videoRecord.id,
+          segment_index: index,
+          starts_at_ms: startsAtMs,
+          ends_at_ms: endsAtMs,
+          original_text: segment.subtitle,
+          translated_text: null,
+        }
+      })
 
       for (const chunk of chunkArray(segmentsPayload, 500)) {
         if (chunk.length === 0) continue
@@ -1019,68 +1119,7 @@ serve(async (request) => {
       }
     }
 
-    // Generate and insert dictation prompts from segments
-    if (result.segments.length > 0) {
-      try {
-        // Delete existing dictation prompts for this session
-        const { error: deleteError } = await supabaseAdmin
-          .from('dictation_prompts')
-          .delete()
-          .eq('session_id', sessionId)
-
-        if (deleteError) {
-          console.error('Failed to delete existing dictation prompts', deleteError)
-          // Continue anyway
-        }
-
-        // Create dictation prompts from segments
-        // Filter out very short segments (less than 3 words) and very long ones (more than 50 words)
-        const dictationPrompts = result.segments
-          .map((segment) => {
-            const wordCount = segment.subtitle.trim().split(/\s+/).length
-            if (wordCount < 3 || wordCount > 50) {
-              return null
-            }
-            return {
-              session_id: sessionId,
-              prompt_index: 0, // Will be set after filtering
-              audio_url: null, // Using YouTube iframe instead
-              expected_text: segment.subtitle.trim(),
-              context: {
-                start_time: segment.start, // in seconds
-                end_time: segment.start + segment.dur,
-                start_time_ms: Math.round(segment.start * 1000),
-                end_time_ms: Math.round((segment.start + segment.dur) * 1000),
-                word_count: wordCount,
-              },
-            }
-          })
-          .filter((prompt): prompt is NonNullable<typeof prompt> => prompt !== null)
-          .map((prompt, index) => ({
-            ...prompt,
-            prompt_index: index, // Set sequential index after filtering
-          }))
-
-        if (dictationPrompts.length > 0) {
-          // Insert in chunks
-          for (const chunk of chunkArray(dictationPrompts, 100)) {
-            if (chunk.length === 0) continue
-            const { error: promptsError } = await supabaseAdmin
-              .from('dictation_prompts')
-              .insert(chunk)
-            if (promptsError) {
-              console.error('Failed to insert dictation prompts chunk', promptsError)
-              // Don't throw, just log
-            }
-          }
-
-          console.log(`Successfully generated ${dictationPrompts.length} dictation prompts`)
-        }
-      } catch (dictationError) {
-        console.error('Failed to generate dictation prompts:', dictationError)
-        // Don't throw, just log - dictation prompt generation is optional
-      }
-    }
+    // Dictation now uses reading_segments directly, no need to create separate dictation_prompts
 
     return jsonResponse(200, {
       transcript: result.transcript,
