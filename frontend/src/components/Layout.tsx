@@ -6,6 +6,7 @@ import { getCurrentUser, signInWithGoogle, signOut, fetchRecentSessions, getUser
 import { useTranslation } from '../context/LanguageContext'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
+import PWAInstallButton from './PWAInstallButton'
 
 const DESKTOP_SIDEBAR_WIDTH = 260
 
@@ -217,21 +218,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-bg-primary text-text-primary">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[220px] transform flex-col border-r border-border-primary bg-bg-secondary px-3 py-4 shadow-xl transition-transform duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:w-[260px] md:px-5 md:py-6 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[220px] transform flex-col border-r border-border-primary bg-bg-primary px-3 py-4 shadow-xl transition-transform duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:w-[260px] md:px-5 md:py-6 ${
           isSidebarOpen
             ? 'translate-x-0'
             : '-translate-x-full'
         }`}
         aria-hidden={!isSidebarOpen}
       >
-        <button
-          type="button"
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-xl text-text-primary md:hidden"
-          aria-label={t('layout.closeSidebar')}
-          onClick={() => setIsSidebarOpen(false)}
-        >
-          ×
-        </button>
         <div className="flex h-full flex-col pr-2">
           {/* Fixed top section */}
           <div className="flex-shrink-0">
@@ -361,7 +354,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       )}
 
       <main
-        className="flex flex-1 flex-col transition-[margin-left] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        className="flex flex-1 flex-col bg-bg-primary transition-[margin-left] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{
           marginLeft: isDesktop ? (isSidebarOpen ? DESKTOP_SIDEBAR_WIDTH : 0) : 0,
         }}
@@ -388,11 +381,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </button>
 
           <div className="flex items-center gap-3">
+            <PWAInstallButton />
             <LanguageToggle />
             <ThemeToggle />
-            <button className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border-primary bg-bg-tertiary text-lg text-text-primary">
-              🔔
-            </button>
           </div>
         </header>
 

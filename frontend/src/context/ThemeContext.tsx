@@ -43,9 +43,9 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light'
+    if (typeof window === 'undefined') return 'system'
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null
-    return stored || 'light' // Default to light mode
+    return stored || 'system' // Default to system preference
   })
 
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => 

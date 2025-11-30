@@ -639,21 +639,21 @@ const ListeningScreen = () => {
   }
 
   // Format difficulty for breadcrumb
-  const formatDifficulty = (level: string | null): string => {
-    if (!level) return t('difficulty.B1')
-    const levelMap: Record<string, string> = {
-      A1: t('difficulty.A1'),
-      A2: t('difficulty.A2'),
-      B1: t('difficulty.B1'),
-      B2: t('difficulty.B2'),
-      C1: t('difficulty.C1'),
-      C2: t('difficulty.C2'),
-      custom: t('difficulty.custom'),
-    }
-    return levelMap[level] || t('difficulty.B1')
-  }
+  // const formatDifficulty = (level: string | null): string => {
+  //   if (!level) return t('difficulty.B1')
+  //   const levelMap: Record<string, string> = {
+  //     A1: t('difficulty.A1'),
+  //     A2: t('difficulty.A2'),
+  //     B1: t('difficulty.B1'),
+  //     B2: t('difficulty.B2'),
+  //     C1: t('difficulty.C1'),
+  //     C2: t('difficulty.C2'),
+  //     custom: t('difficulty.custom'),
+  //   }
+  //   return levelMap[level] || t('difficulty.B1')
+  // }
 
-  const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : t('difficulty.B1')
+  // const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : t('difficulty.B1')
 
   if (isLoading) {
     return (
@@ -686,24 +686,24 @@ const ListeningScreen = () => {
     <div className="flex flex-1 flex-col text-text-primary">
       <div className="flex flex-1 flex-col overflow-auto">
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center gap-2 typo-body-sm text-text-secondary">
+        <div className="mb-6 flex items-center gap-2 overflow-hidden typo-body-sm text-text-secondary">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="transition-chill hover:text-accent-primary"
+            className="flex-shrink-0 transition-chill hover:text-accent-primary whitespace-nowrap"
           >
             {t('listening.home')}
           </button>
-          <span>/</span>
+          <span className="flex-shrink-0">/</span>
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="transition-chill hover:text-accent-primary"
+            className="truncate transition-chill hover:text-accent-primary min-w-0"
           >
-            {difficultyLabel}
+            Dash
           </button>
-          <span>/</span>
-          <span className="text-text-primary">{t('listening.comprehension')}</span>
+          <span className="flex-shrink-0">/</span>
+          <span className="truncate text-text-primary min-w-0">{t('listening.comprehension')}</span>
         </div>
 
         {/* Title and Instruction */}
@@ -740,13 +740,13 @@ const ListeningScreen = () => {
           >
             <div 
               ref={transcriptScrollRef}
-              className="flex-1 space-y-2 overflow-y-auto typo-body min-h-0 transition-all duration-300 rounded-lg"
+              className="flex-1 space-y-2 overflow-y-auto typo-body min-h-0 max-h-80 transition-all duration-300 rounded-lg lg:max-h-none"
             >
               {transcriptEntries.map((entry, index) => (
                 <div
                   key={index}
                   onClick={() => handleSegmentClick(entry.startMs)}
-                  className={`rounded-lg p-3 transition-all duration-200 ease-in-out cursor-pointer ${
+                  className={`rounded-lg p-2 transition-all duration-200 ease-in-out cursor-pointer md:p-3 ${
                     !showTranscript ? 'blur-md select-none pointer-events-none' : ''
                   } ${
                     entry.highlighted

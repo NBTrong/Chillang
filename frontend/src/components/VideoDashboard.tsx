@@ -70,9 +70,17 @@ const VideoDashboard = () => {
     loadData()
   }, [videoId, t])
 
-  // Auto-scroll from top to bottom when video is loaded
+  // Auto-scroll from top to bottom when video is loaded (only on first visit to any video)
   useEffect(() => {
     if (!isLoading && video && !error) {
+      // Check if auto-scroll has already been shown (for any video)
+      const storageKey = 'videoDashboardAutoScroll_shown'
+      const hasShownAutoScroll = localStorage.getItem(storageKey) === 'true'
+
+      if (hasShownAutoScroll) {
+        return // Skip auto-scroll if already shown
+      }
+
       const highlightTimers: number[] = []
       let isCleanedUp = false
 
@@ -125,6 +133,11 @@ const VideoDashboard = () => {
                     }
                     return prev
                   })
+
+                  // After the last mode is removed, save to localStorage
+                  if (modeId === modeIds[modeIds.length - 1]) {
+                    localStorage.setItem(storageKey, 'true')
+                  }
                 }, 500)
                 highlightTimers.push(removeTimer)
               }, index * 500)

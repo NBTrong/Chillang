@@ -96,7 +96,7 @@ export const vi: Record<TranslationKey, string> = {
   
   // Layout
   'layout.newSession': 'New Study Session',
-  'layout.vocabularyManager': 'Vocabulary Manager',
+  'layout.vocabularyManager': 'Vocabulary',
   'layout.recentVideos': 'RECENT VIDEOS',
   'layout.noVideos': 'Chưa có video nào',
   'layout.closeSidebar': 'Đóng sidebar',
@@ -138,5 +138,8 @@ export const vi: Record<TranslationKey, string> = {
   'difficulty.C1': 'Advanced English',
   'difficulty.C2': 'Proficiency English',
   'difficulty.custom': 'Intermediate English',
+  
+  // PWA
+  'pwa.install': 'Cài đặt ứng dụng',
 }
 

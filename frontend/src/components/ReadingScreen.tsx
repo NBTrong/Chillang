@@ -192,21 +192,21 @@ const ReadingScreen = () => {
     })
   }
 
-  const formatDifficulty = (level: string | null): string => {
-    if (!level) return t('difficulty.B1')
-    const levelMap: Record<string, string> = {
-      A1: t('difficulty.A1'),
-      A2: t('difficulty.A2'),
-      B1: t('difficulty.B1'),
-      B2: t('difficulty.B2'),
-      C1: t('difficulty.C1'),
-      C2: t('difficulty.C2'),
-      custom: t('difficulty.custom'),
-    }
-    return levelMap[level] || t('difficulty.B1')
-  }
+  // const formatDifficulty = (level: string | null): string => {
+  //   if (!level) return t('difficulty.B1')
+  //   const levelMap: Record<string, string> = {
+  //     A1: t('difficulty.A1'),
+  //     A2: t('difficulty.A2'),
+  //     B1: t('difficulty.B1'),
+  //     B2: t('difficulty.B2'),
+  //     C1: t('difficulty.C1'),
+  //     C2: t('difficulty.C2'),
+  //     custom: t('difficulty.custom'),
+  //   }
+  //   return levelMap[level] || t('difficulty.B1')
+  // }
 
-  const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
+  // const difficultyLabel = video ? formatDifficulty(video.difficulty_level) : 'Intermediate English'
 
   if (isLoading) {
     return (
@@ -240,24 +240,24 @@ const ReadingScreen = () => {
       {/* Content Container - dùng padding mặc định của Layout */}
       <div className="flex-1 pb-24 w-full">
         {/* Breadcrumb Navigation */}
-        <nav className="mb-12 flex items-center gap-2 text-sm">
+        <nav className="mb-12 flex items-center gap-2 overflow-hidden text-sm">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="text-text-tertiary hover:text-text-primary transition-colors"
+            className="flex-shrink-0 text-text-tertiary hover:text-text-primary transition-colors whitespace-nowrap"
           >
             {t('reading.home')}
           </button>
-          <span className="text-text-tertiary">/</span>
+          <span className="flex-shrink-0 text-text-tertiary">/</span>
           <button
             type="button"
             onClick={() => navigate(`/${videoId}/dash`)}
-            className="text-text-tertiary hover:text-text-primary transition-colors"
+            className="truncate text-text-tertiary hover:text-text-primary transition-colors min-w-0"
           >
-            {difficultyLabel}
+            Dash
           </button>
-          <span className="text-text-tertiary">/</span>
-          <span className="text-text-primary">{t('reading.comprehension')}</span>
+          <span className="flex-shrink-0 text-text-tertiary">/</span>
+          <span className="truncate text-text-primary min-w-0">{t('reading.comprehension')}</span>
         </nav>
 
         {/* Main Content */}

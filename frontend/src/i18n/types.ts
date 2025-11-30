@@ -138,4 +138,7 @@ export type TranslationKey =
   | 'difficulty.C1'
   | 'difficulty.C2'
   | 'difficulty.custom'
+  
+  // PWA
+  | 'pwa.install'
 

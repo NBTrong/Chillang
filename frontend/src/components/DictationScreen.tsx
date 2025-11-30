@@ -604,24 +604,24 @@ const DictationScreen = () => {
       <div className="flex flex-1 flex-col text-text-primary">
         <div className="flex flex-1 flex-col overflow-auto">
           {/* Breadcrumbs */}
-          <div className="mb-6 flex items-center gap-2 typo-body-sm text-text-secondary">
+          <div className="mb-6 flex items-center gap-2 overflow-hidden typo-body-sm text-text-secondary">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="transition-chill hover:text-accent-primary"
+              className="flex-shrink-0 transition-chill hover:text-accent-primary whitespace-nowrap"
             >
               {t('common.home')}
             </button>
-            <span>/</span>
+            <span className="flex-shrink-0">/</span>
             <button
               type="button"
               onClick={() => navigate(`/${videoId}/dash`)}
-              className="transition-chill hover:text-accent-primary"
+              className="truncate transition-chill hover:text-accent-primary min-w-0"
             >
-              {formatDifficulty(video.difficulty_level)}
+              Dash
             </button>
-            <span>/</span>
-            <span className="text-text-primary">{t('dictation.title')}</span>
+            <span className="flex-shrink-0">/</span>
+            <span className="truncate text-text-primary min-w-0">{t('dictation.title')}</span>
           </div>
 
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-8">
@@ -649,24 +649,24 @@ const DictationScreen = () => {
     <div className="flex flex-1 flex-col text-text-primary">
       <div className="flex flex-1 flex-col overflow-auto pb-24 lg:pb-0">
         {/* Breadcrumbs */}
-        <div className="mb-6 flex items-center gap-2 typo-body-sm text-text-secondary">
+        <div className="mb-6 flex items-center gap-2 overflow-hidden typo-body-sm text-text-secondary">
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="transition-chill hover:text-accent-primary"
+          className="flex-shrink-0 transition-chill hover:text-accent-primary whitespace-nowrap"
         >
           {t('common.home')}
         </button>
-        <span>/</span>
+        <span className="flex-shrink-0">/</span>
         <button
           type="button"
           onClick={() => navigate(`/${videoId}/dash`)}
-          className="transition-chill hover:text-accent-primary"
+          className="truncate transition-chill hover:text-accent-primary min-w-0"
         >
           {formatDifficulty(video.difficulty_level)}
         </button>
-        <span>/</span>
-        <span className="text-text-primary">{t('dictation.title')}</span>
+        <span className="flex-shrink-0">/</span>
+        <span className="truncate text-text-primary min-w-0">{t('dictation.title')}</span>
       </div>
 
         <div className="mx-auto w-full max-w-6xl px-4 pb-4 md:px-6">
