@@ -86,9 +86,6 @@ const DictationScreen = () => {
   const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const timeCheckIntervalRef = useRef<number | null>(null)
-  
-  // Button bottom position for mobile (adjusts when keyboard opens)
-  const [buttonBottom, setButtonBottom] = useState<string>('max(1rem, env(safe-area-inset-bottom, 1rem))')
 
   // Memoize YouTube embed URL to ensure origin is set correctly
   const youtubeEmbedUrl = useMemo(() => {
@@ -313,42 +310,6 @@ const DictationScreen = () => {
       textareaRef.current?.focus()
     }, 100)
   }, [currentPromptIndex])
-
-  // Detect keyboard visibility on mobile
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return
-
-    const handleViewportChange = () => {
-      if (!window.visualViewport) return
-      
-      // Calculate if keyboard is likely open
-      // On mobile, when keyboard opens, visualViewport height becomes smaller than window.innerHeight
-      const viewportHeight = window.visualViewport.height
-      const windowHeight = window.innerHeight
-      const heightDifference = windowHeight - viewportHeight
-      
-      // If viewport is significantly smaller (more than 150px), keyboard is likely open
-      const keyboardOpen = heightDifference > 150
-      
-      // Calculate bottom position for button
-      if (keyboardOpen && window.visualViewport) {
-        const bottomValue = window.innerHeight - window.visualViewport.height + 16
-        setButtonBottom(`${bottomValue}px`)
-      } else {
-        setButtonBottom('max(1rem, env(safe-area-inset-bottom, 1rem))')
-      }
-    }
-
-    window.visualViewport.addEventListener('resize', handleViewportChange)
-    window.visualViewport.addEventListener('scroll', handleViewportChange)
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange)
-        window.visualViewport.removeEventListener('scroll', handleViewportChange)
-      }
-    }
-  }, [])
 
   const currentSegment = segments[currentPromptIndex]
   const totalSegments = segments.length
@@ -577,19 +538,19 @@ const DictationScreen = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleReplay, isAnswerChecked, isCorrect, isLastSegment, handleCheckAnswer, handleNext, handlePrevious])
 
-  const formatDifficulty = (level: string | null): string => {
-    if (!level) return 'Intermediate English'
-    const levelMap: Record<string, string> = {
-      A1: 'Beginner English',
-      A2: 'Elementary English',
-      B1: 'Intermediate English',
-      B2: 'Upper Intermediate English',
-      C1: 'Advanced English',
-      C2: 'Proficiency English',
-      custom: 'Intermediate English',
-    }
-    return levelMap[level] || 'Intermediate English'
-  }
+  // const formatDifficulty = (level: string | null): string => {
+  //   if (!level) return 'Intermediate English'
+  //   const levelMap: Record<string, string> = {
+  //     A1: 'Beginner English',
+  //     A2: 'Elementary English',
+  //     B1: 'Intermediate English',
+  //     B2: 'Upper Intermediate English',
+  //     C1: 'Advanced English',
+  //     C2: 'Proficiency English',
+  //     custom: 'Intermediate English',
+  //   }
+  //   return levelMap[level] || 'Intermediate English'
+  // }
 
   // Render text with word-by-word highlighting
   const renderTextWithHighlights = (text: string, comparisons: WordComparison[], isUserAnswer: boolean) => {
@@ -742,6 +703,37 @@ const DictationScreen = () => {
                 loading="lazy"
                 className="absolute inset-0 h-full w-full"
               />
+            </div>
+            
+            {/* Replay Button for Mobile/Tablet - Below video */}
+            <div className="mt-4 flex justify-center lg:hidden">
+              <button
+                type="button"
+                onClick={handleReplay}
+                disabled={!isPlayerReady}
+                className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl gradient-primary px-6 py-4 text-lg font-semibold text-white shadow-glow-primary-light transition-chill hover:shadow-glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={t('dictation.replay')}
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>{t('dictation.replay')}</span>
+              </button>
             </div>
           </div>
 
@@ -938,41 +930,6 @@ const DictationScreen = () => {
         </div>
       </div>
 
-      {/* Sticky Replay Button for Mobile/Tablet */}
-      <div 
-        className="fixed left-0 right-0 z-40 flex justify-center p-4 transition-all duration-300 lg:hidden" 
-        style={{ 
-          bottom: buttonBottom
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleReplay}
-          disabled={!isPlayerReady}
-          className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl gradient-primary px-6 py-4 text-lg font-semibold text-white shadow-glow-primary-light transition-chill hover:shadow-glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label={t('dictation.replay')}
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth={2.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>{t('dictation.replay')}</span>
-        </button>
-      </div>
     </div>
   )
 }
