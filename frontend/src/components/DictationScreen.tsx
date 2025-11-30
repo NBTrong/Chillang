@@ -356,6 +356,21 @@ const DictationScreen = () => {
     const currentSegment = segments[currentPromptIndex]
     if (!isPlayerReady || !youtubePlayerRef.current || !currentSegment) return
 
+    // Check if textarea is currently focused (keyboard is open)
+    const wasTextareaFocused = document.activeElement === textareaRef.current
+
+    // If textarea was focused, restore focus immediately to prevent keyboard from closing
+    // This needs to happen synchronously before any async operations
+    if (wasTextareaFocused && textareaRef.current) {
+      // Use requestAnimationFrame to restore focus in the next frame
+      // This ensures it happens after any blur events but as quickly as possible
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus()
+        })
+      })
+    }
+
     // Clear any existing time check interval
     if (timeCheckIntervalRef.current) {
       clearInterval(timeCheckIntervalRef.current)
@@ -405,9 +420,22 @@ const DictationScreen = () => {
             }, 50) // Check every 50ms for more precise control
           }
         }
+        
+        // Also restore focus after video starts playing as a backup
+        if (wasTextareaFocused && textareaRef.current) {
+          setTimeout(() => {
+            textareaRef.current?.focus()
+          }, 100)
+        }
       }, 100)
     } catch (error) {
       console.error('Error replaying video:', error)
+      // Restore focus even if there's an error
+      if (wasTextareaFocused && textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current?.focus()
+        }, 100)
+      }
     }
   }, [isPlayerReady, currentPromptIndex, segments])
 
@@ -710,6 +738,20 @@ const DictationScreen = () => {
               <button
                 type="button"
                 onClick={handleReplay}
+                onMouseDown={(e) => {
+                  // Prevent button from taking focus when textarea is focused
+                  // This keeps the keyboard open on mobile
+                  // onClick will still fire, so handleReplay will be called
+                  if (document.activeElement === textareaRef.current) {
+                    e.preventDefault()
+                  }
+                }}
+                onTouchStart={(e) => {
+                  // Same for touch devices
+                  if (document.activeElement === textareaRef.current) {
+                    e.preventDefault()
+                  }
+                }}
                 disabled={!isPlayerReady}
                 className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl gradient-primary px-6 py-4 text-lg font-semibold text-white shadow-glow-primary-light transition-chill hover:shadow-glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label={t('dictation.replay')}
