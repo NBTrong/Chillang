@@ -218,7 +218,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-bg-primary text-text-primary">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[220px] transform flex-col border-r border-border-primary bg-bg-primary px-3 py-4 shadow-xl transition-transform duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:w-[260px] md:px-5 md:py-6 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[220px] transform flex-col border-r border-border-primary bg-bg-primary px-3 py-4 shadow-xl transition-transform duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform md:w-[260px] md:px-5 md:py-6 ${
           isSidebarOpen
             ? 'translate-x-0'
             : '-translate-x-full'
@@ -260,13 +260,14 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <span className="text-xl leading-none">＋</span>
                 {t('layout.newSession')}
               </button>
-              <button className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover">
+              {/* Temporarily hidden until vocabulary feature is implemented */}
+              {/* <button className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover">
                 <span className="text-xl leading-none">💎</span>
                 {t('layout.vocabularyManager')}
-              </button>
+              </button> */}
             </div>
 
-            <div className="mt-10 px-3 text-[10px] font-semibold tracking-[0.35em] text-text-tertiary">
+            <div className="mt-6 px-3 text-[10px] font-semibold tracking-[0.35em] text-text-tertiary">
               {t('layout.recentVideos')}
             </div>
           </div>
@@ -344,14 +345,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
         </div>
       </aside>
 
-      {isSidebarOpen && !isDesktop && (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          aria-label={t('layout.closeNav')}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        className={`fixed inset-0 z-30 bg-black/50 transition-opacity duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] md:hidden ${
+          isSidebarOpen && !isDesktop
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+        aria-label={t('layout.closeNav')}
+        onClick={() => setIsSidebarOpen(false)}
+        aria-hidden={!isSidebarOpen || isDesktop}
+      />
 
       <main
         className="flex flex-1 flex-col bg-bg-primary transition-[margin-left] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
