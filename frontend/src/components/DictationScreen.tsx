@@ -647,7 +647,7 @@ const DictationScreen = () => {
 
   return (
     <div className="flex flex-1 flex-col text-text-primary">
-      <div className="flex flex-1 flex-col overflow-auto">
+      <div className="flex flex-1 flex-col overflow-auto pb-24 lg:pb-0">
         {/* Breadcrumbs */}
         <div className="mb-6 flex items-center gap-2 typo-body-sm text-text-secondary">
         <button
@@ -669,11 +669,11 @@ const DictationScreen = () => {
         <span className="text-text-primary">{t('dictation.title')}</span>
       </div>
 
-        <div className="mx-auto w-full max-w-6xl px-6 pb-4">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-4 md:px-6">
           {/* YouTube Video Player - Smaller size */}
           <div className="mb-4">
             <div 
-              className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-xl border border-border-primary bg-bg-secondary shadow-chill-md transition-chill" 
+              className="relative mx-auto w-full overflow-hidden rounded-xl border border-border-primary bg-bg-secondary shadow-chill-md transition-chill md:max-w-2xl" 
               style={{ aspectRatio: '16/9' }}
             >
               <iframe
@@ -689,12 +689,12 @@ const DictationScreen = () => {
           </div>
 
           <div className="flex flex-col items-center justify-center w-full">
-            <div className="w-full max-w-3xl space-y-6">
+            <div className="w-full space-y-6 md:max-w-3xl">
           {/* Progress Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between typo-body-sm text-text-secondary">
               <span className="font-medium">{t('dictation.question')} {currentPromptIndex + 1}/{totalSegments}</span>
-              <span className="text-xs text-text-tertiary">
+              <span className="hidden text-xs text-text-tertiary md:inline">
                 Cmd+Shift: {t('dictation.replay')} / Enter: {t('dictation.checkAnswer')}
               </span>
             </div>
@@ -730,14 +730,14 @@ const DictationScreen = () => {
               />
               
               {/* Action Buttons */}
-              <div className="absolute bottom-6 right-6 flex items-center gap-3">
+              <div className="absolute bottom-4 right-4 flex items-center gap-2 md:bottom-6 md:right-6 md:gap-3">
                 {/* Check Answer Button */}
                 {!isAnswerChecked && (
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
                     disabled={!userInput.trim()}
-                    className={`flex h-12 w-12 items-center justify-center rounded-full border border-accent-primary bg-bg-tertiary text-accent-primary transition-chill hover:bg-accent-primary hover:text-white hover-scale disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border border-accent-primary bg-bg-tertiary text-accent-primary transition-chill hover:bg-accent-primary hover:text-white hover-scale disabled:opacity-50 disabled:cursor-not-allowed md:h-12 md:w-12 ${
                       userInput.trim() ? 'border-accent-primary' : 'border-border-primary'
                     }`}
                     aria-label={t('dictation.checkAnswer')}
@@ -763,7 +763,7 @@ const DictationScreen = () => {
                   type="button"
                   onClick={handlePrevious}
                   disabled={currentPromptIndex === 0}
-                  className={`flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale md:h-12 md:w-12 ${
                     currentPromptIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label={t('dictation.previous')}
@@ -793,7 +793,7 @@ const DictationScreen = () => {
                   type="button"
                   onClick={handleSkip}
                   disabled={isLastSegment}
-                  className={`flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale md:h-12 md:w-12 ${
                     isLastSegment ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   aria-label={t('dictation.skip')}
@@ -879,6 +879,37 @@ const DictationScreen = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Sticky Replay Button for Mobile/Tablet */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center p-4 lg:hidden" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}>
+        <button
+          type="button"
+          onClick={handleReplay}
+          disabled={!isPlayerReady}
+          className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl gradient-primary px-6 py-4 text-lg font-semibold text-white shadow-glow-primary-light transition-chill hover:shadow-glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label={t('dictation.replay')}
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{t('dictation.replay')}</span>
+        </button>
       </div>
     </div>
   )

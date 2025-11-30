@@ -101,7 +101,7 @@ const HomeScreen = () => {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center md:py-10">
       <div className="w-full max-w-5xl space-y-8">
         {/* Hero copy trên, input bên dưới */}
         <div className="space-y-3">
@@ -117,7 +117,7 @@ const HomeScreen = () => {
         <div className="space-y-4">
           <form
             onSubmit={handleSubmit}
-            className="relative mx-auto flex w-full max-w-2xl items-center gap-4 rounded-2xl border border-border-primary bg-bg-secondary/90 px-6 py-4 shadow-chill-md backdrop-blur-lg transition-chill hover:shadow-chill-lg"
+            className="relative mx-auto flex w-full max-w-2xl items-center gap-4 rounded-2xl border border-border-primary bg-bg-secondary/90 px-4 py-3 shadow-chill-md backdrop-blur-lg transition-chill hover:shadow-chill-lg md:px-6 md:py-4"
           >
             <input
               type="url"
@@ -131,7 +131,7 @@ const HomeScreen = () => {
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary text-xl text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100"
+                className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary text-xl text-white shadow-glow-primary-light transition-chill hover-scale hover:shadow-glow-primary disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100 md:h-12 md:w-12"
                 aria-label={t('home.submitButton')}
               >
                 {isProcessing ? (

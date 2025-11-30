@@ -274,7 +274,7 @@ const VideoDashboard = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-border-primary bg-bg-secondary px-5 py-6 shadow-chill-sm transition-chill hover:shadow-chill-md">
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-text-tertiary">{t('dashboard.totalVocabulary')}</p>
           {vocabularyCount > 0 ? (
@@ -296,7 +296,7 @@ const VideoDashboard = () => {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-tertiary">{t('dashboard.selectMode')}</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {modes.map((mode) => (
             <button
               key={mode.id}

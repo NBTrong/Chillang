@@ -237,11 +237,21 @@ const ListeningScreen = () => {
     loadData()
   }, [videoId, t])
 
-  // Sync transcript height with video height
+  // Sync transcript height with video height (only on desktop where they're side-by-side)
   useEffect(() => {
     if (!video || !showTranscript) return
 
     const syncHeight = () => {
+      // Only sync on desktop (lg breakpoint, 1024px+)
+      if (window.innerWidth < 1024) {
+        // On mobile/tablet, remove height constraint
+        if (transcriptContainerRef.current) {
+          transcriptContainerRef.current.style.height = ''
+          transcriptContainerRef.current.style.maxHeight = ''
+        }
+        return true
+      }
+
       if (videoContainerRef.current && transcriptContainerRef.current) {
         const videoHeight = videoContainerRef.current.offsetHeight
         // Only sync if video has a valid height (greater than 0)
@@ -705,7 +715,7 @@ const ListeningScreen = () => {
         </div>
 
         {/* Video and Transcript Section */}
-        <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_400px]">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_400px]">
           {/* Video Player */}
           <div 
             ref={videoContainerRef}
@@ -726,7 +736,7 @@ const ListeningScreen = () => {
           {/* Transcript Panel */}
           <div 
             ref={transcriptContainerRef}
-            className="flex flex-col transition-chill relative rounded-xl"
+            className="flex w-full flex-col transition-chill relative rounded-xl lg:w-auto"
           >
             <div 
               ref={transcriptScrollRef}
@@ -760,9 +770,9 @@ const ListeningScreen = () => {
         </div>
 
         {/* Results Section */}
-        <div className="mb-8 flex flex-wrap items-center gap-3">
+        <div className="mb-8 flex flex-wrap items-center gap-2 md:gap-3">
           {isSubmitted && score !== null && (
-            <div className="flex items-center gap-4 rounded-lg border border-border-accent bg-accent-secondary/10 px-6 py-3 shadow-chill-sm">
+            <div className="flex items-center gap-2 rounded-lg border border-border-accent bg-accent-secondary/10 px-4 py-2 shadow-chill-sm md:gap-4 md:px-6 md:py-3">
               <p className="typo-caption text-text-tertiary">{t('listening.result')}</p>
               <p className="typo-title leading-none text-accent-secondary">{score}/100</p>
             </div>
@@ -771,7 +781,7 @@ const ListeningScreen = () => {
             <button
               onClick={handleSubmit}
               disabled={Object.keys(userAnswers).length === 0 || questions.length === 0}
-              className="rounded-lg border border-accent-primary bg-accent-primary px-6 py-3 typo-body-sm font-semibold text-white transition-chill hover:bg-accent-primary/90 hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg border border-accent-primary bg-accent-primary px-4 py-2 typo-body-sm font-semibold text-white transition-chill hover:bg-accent-primary/90 hover-scale disabled:opacity-50 disabled:cursor-not-allowed md:px-6 md:py-3"
             >
               {t('listening.submitAnswers')}
             </button>
@@ -783,7 +793,7 @@ const ListeningScreen = () => {
                 setUserAnswers({})
                 setScore(null)
               }}
-              className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
+              className="rounded-lg border border-border-primary bg-bg-secondary px-4 py-2 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale md:px-6 md:py-3"
             >
               {t('listening.tryAgain')}
             </button>
@@ -792,7 +802,7 @@ const ListeningScreen = () => {
             <button
               onClick={handleGenerateMore}
               disabled={isGenerating}
-              className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg border border-border-primary bg-bg-secondary px-4 py-2 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale disabled:opacity-50 disabled:cursor-not-allowed md:px-6 md:py-3"
             >
               {isGenerating 
                 ? t('listening.generating')
@@ -803,7 +813,7 @@ const ListeningScreen = () => {
           )}
           <button
             onClick={() => setShowTranscript(!showTranscript)}
-            className="rounded-lg border border-border-primary bg-bg-secondary px-6 py-3 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale"
+            className="rounded-lg border border-border-primary bg-bg-secondary px-4 py-2 typo-body-sm font-semibold text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale md:px-6 md:py-3"
           >
             {showTranscript ? t('listening.hideTranscript') : t('listening.showTranscript')}
           </button>

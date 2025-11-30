@@ -111,14 +111,21 @@ const ReadingScreen = () => {
       
       // Tính toán vị trí popup gần từ được click
       const buttonRect = event.currentTarget.getBoundingClientRect()
-      const popupWidth = 420
+      const isMobile = window.innerWidth < 768
+      const popupWidth = isMobile ? Math.min(window.innerWidth - 48, 420) : 420
       const popupHeight = 300 // Ước tính chiều cao
       const spacing = 16
       
-      // Ưu tiên hiển thị bên phải, nếu không đủ chỗ thì hiển thị bên trái
-      let left = buttonRect.right + spacing
-      if (left + popupWidth > window.innerWidth - 24) {
-        left = buttonRect.left - popupWidth - spacing
+      // Trên mobile, center popup theo chiều ngang
+      let left: number
+      if (isMobile) {
+        left = (window.innerWidth - popupWidth) / 2
+      } else {
+        // Ưu tiên hiển thị bên phải, nếu không đủ chỗ thì hiển thị bên trái
+        left = buttonRect.right + spacing
+        if (left + popupWidth > window.innerWidth - 24) {
+          left = buttonRect.left - popupWidth - spacing
+        }
       }
       
       // Ưu tiên hiển thị phía trên, nếu không đủ chỗ thì hiển thị phía dưới
@@ -287,7 +294,7 @@ const ReadingScreen = () => {
       {selectedEntry && popupPosition && (
         <div 
           data-dictionary-popup
-          className="fixed w-[420px] max-w-[calc(100vw-3rem)] bg-bg-tertiary border border-border-primary rounded-2xl p-6 shadow-chill-dark z-50"
+          className="fixed w-[calc(100vw-3rem)] bg-bg-tertiary border border-border-primary rounded-2xl p-4 shadow-chill-dark z-50 md:w-[420px] md:p-6"
           style={{ 
             top: `${popupPosition.top}px`, 
             left: `${popupPosition.left}px` 
