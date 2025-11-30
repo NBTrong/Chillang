@@ -298,6 +298,7 @@ const DictationScreen = () => {
   const currentSegment = segments[currentPromptIndex]
   const totalSegments = segments.length
   const progress = totalSegments > 0 ? ((currentPromptIndex + 1) / totalSegments) * 100 : 0
+  const isLastSegment = currentPromptIndex === totalSegments - 1
 
   // Normalize text for comparison
   const normalizeText = (text: string): string => {
@@ -446,17 +447,24 @@ const DictationScreen = () => {
     }
   }
 
+  const handlePrevious = () => {
+    if (currentPromptIndex > 0) {
+      setCurrentPromptIndex(currentPromptIndex - 1)
+    }
+  }
+
   const handleClose = () => {
     navigate(`/${videoId}/dash`)
   }
 
-  // Handle input change - hide feedback if wrong answer
+  // Handle input change - reset feedback state when user edits answer
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setUserInput(e.target.value)
-    // Hide feedback if showing and answer was wrong
-    if (showFeedback && isAnswerChecked && !isCorrect) {
+    // Reset feedback state when user edits (whether answer was correct or wrong)
+    if (showFeedback && isAnswerChecked) {
       setShowFeedback(false)
       setIsAnswerChecked(false)
+      setIsCorrect(false)
     }
   }
 
@@ -479,12 +487,40 @@ const DictationScreen = () => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault()
         handleReplay()
+        return
+      }
+      
+      // Arrow Left: Previous question
+      if (e.key === 'ArrowLeft' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          handlePrevious()
+          return
+        }
+      }
+      
+      // Enter: Check answer or move to next if correct
+      if (e.key === 'Enter' && !e.shiftKey) {
+        // Only handle if not typing in textarea
+        const target = e.target as HTMLElement
+        if (target.tagName === 'TEXTAREA') {
+          // Let textarea handle it
+          return
+        }
+        
+        e.preventDefault()
+        if (!isAnswerChecked) {
+          handleCheckAnswer()
+        } else if (isCorrect && !isLastSegment) {
+          handleNext()
+        }
       }
     }
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleReplay])
+  }, [handleReplay, isAnswerChecked, isCorrect, isLastSegment, handleCheckAnswer, handleNext, handlePrevious])
 
   const formatDifficulty = (level: string | null): string => {
     if (!level) return 'Intermediate English'
@@ -609,8 +645,6 @@ const DictationScreen = () => {
     )
   }
 
-  const isLastSegment = currentPromptIndex === totalSegments - 1
-
   return (
     <div className="flex flex-1 flex-col text-text-primary">
       <div className="flex flex-1 flex-col overflow-auto">
@@ -661,7 +695,7 @@ const DictationScreen = () => {
             <div className="flex items-center justify-between typo-body-sm text-text-secondary">
               <span className="font-medium">{t('dictation.question')} {currentPromptIndex + 1}/{totalSegments}</span>
               <span className="text-xs text-text-tertiary">
-                Cmd+Shift: {t('dictation.replay')} • Enter: {t('dictation.checkAnswer')}
+                Cmd+Shift: {t('dictation.replay')} / Enter: {t('dictation.checkAnswer')}
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-bg-tertiary">
@@ -691,8 +725,7 @@ const DictationScreen = () => {
                 onChange={handleInputChange}
                 onKeyDown={handleTextareaKeyDown}
                 placeholder={t('dictation.inputPlaceholder')}
-                disabled={showFeedback && isAnswerChecked && isCorrect && !isLastSegment}
-                className="w-full resize-none bg-transparent typo-subtitle text-text-primary placeholder:text-text-tertiary focus:outline-none disabled:opacity-50"
+                className="w-full resize-none bg-transparent typo-subtitle text-text-primary placeholder:text-text-tertiary focus:outline-none"
                 rows={4}
               />
               
@@ -725,6 +758,36 @@ const DictationScreen = () => {
                     </svg>
                   </button>
                 )}
+                {/* Previous Button */}
+                <button
+                  type="button"
+                  onClick={handlePrevious}
+                  disabled={currentPromptIndex === 0}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full border border-border-primary bg-bg-tertiary text-text-primary transition-chill hover:bg-interactive-hover hover:border-border-accent hover-scale ${
+                    currentPromptIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  aria-label={t('dictation.previous')}
+                  title={t('dictation.previous') + ' (←)'}
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
                 {/* Skip Button */}
                 <button
                   type="button"
@@ -781,12 +844,6 @@ const DictationScreen = () => {
                   </p>
                 </div>
               )} */}
-              <div className="space-y-2">
-                <p className="typo-body-sm text-text-secondary">{t('dictation.yourAnswer')}</p>
-                <p className="typo-body text-text-primary">
-                  {renderTextWithHighlights(feedback.userAnswer, feedback.wordComparisons, true)}
-                </p>
-              </div>
               <div className="space-y-2">
                 <p className="typo-body-sm text-text-secondary">{t('dictation.correctAnswer')}</p>
                 <p className="typo-body text-text-primary">

@@ -76,6 +76,7 @@ export const en: Record<TranslationKey, string> = {
   'dictation.replay': 'Replay',
   'dictation.hint': 'Hint',
   'dictation.skip': 'Skip',
+  'dictation.previous': 'Previous',
   'dictation.close': 'Close',
   'dictation.correct': '✓ Correct! Your answer is completely right.',
   'dictation.incorrect': '✗ Answer is not correct. Type any character to hide the answer and continue practicing.',

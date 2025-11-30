@@ -76,6 +76,7 @@ export const vi: Record<TranslationKey, string> = {
   'dictation.replay': 'Phát lại',
   'dictation.hint': 'Gợi ý',
   'dictation.skip': 'Bỏ qua',
+  'dictation.previous': 'Câu trước',
   'dictation.close': 'Đóng',
   'dictation.correct': '✓ Chính xác! Câu trả lời của bạn hoàn toàn đúng.',
   'dictation.incorrect': '✗ Câu trả lời chưa chính xác. Gõ bất kỳ ký tự nào để ẩn đáp án và tiếp tục luyện tập.',

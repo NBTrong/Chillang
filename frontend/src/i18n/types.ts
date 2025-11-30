@@ -76,6 +76,7 @@ export type TranslationKey =
   | 'dictation.replay'
   | 'dictation.hint'
   | 'dictation.skip'
+  | 'dictation.previous'
   | 'dictation.close'
   | 'dictation.correct'
   | 'dictation.incorrect'
