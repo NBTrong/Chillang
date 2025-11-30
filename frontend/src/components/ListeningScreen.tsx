@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   fetchVideoByYoutubeId,
@@ -13,6 +13,16 @@ import {
   type ReadingSegment,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
+
+// Helper to get YouTube embed URL with proper origin for PWA
+const getYouTubeEmbedUrl = (videoId: string, additionalParams: string = '') => {
+  const origin = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : ''
+  const baseParams = `rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(origin)}`
+  const params = additionalParams ? `${baseParams}&${additionalParams}` : baseParams
+  return `https://www.youtube.com/embed/${videoId}?${params}`
+}
 
 type Question = {
   id: string
@@ -91,6 +101,12 @@ const ListeningScreen = () => {
   const youtubePlayerRef = useRef<YT.Player | null>(null)
   const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
+
+  // Memoize YouTube embed URL to ensure origin is set correctly
+  const youtubeEmbedUrl = useMemo(() => {
+    if (!video) return ''
+    return getYouTubeEmbedUrl(video.youtube_video_id, 'enablejsapi=1')
+  }, [video])
 
   // Helper functions
   const formatTime = (seconds: number) => {
@@ -725,10 +741,12 @@ const ListeningScreen = () => {
             <iframe
               id="youtube-player"
               ref={youtubeIframeRef}
-              src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1&enablejsapi=1`}
+              src={youtubeEmbedUrl}
               title={video.title || 'YouTube video player'}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
               className="absolute inset-0 h-full w-full"
             />
           </div>

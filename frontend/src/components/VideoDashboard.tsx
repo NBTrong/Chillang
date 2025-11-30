@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   fetchVideoByYoutubeId,
@@ -9,6 +9,16 @@ import {
   type StudySessionRecord,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
+
+// Helper to get YouTube embed URL with proper origin for PWA
+const getYouTubeEmbedUrl = (videoId: string, additionalParams: string = '') => {
+  const origin = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : ''
+  const baseParams = `rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(origin)}`
+  const params = additionalParams ? `${baseParams}&${additionalParams}` : baseParams
+  return `https://www.youtube.com/embed/${videoId}?${params}`
+}
 
 const VideoDashboard = () => {
   const { t } = useTranslation()
@@ -24,6 +34,12 @@ const VideoDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [highlightedMode, setHighlightedMode] = useState<string | null>(null)
+
+  // Memoize YouTube embed URL to ensure origin is set correctly
+  const youtubeEmbedUrl = useMemo(() => {
+    if (!video) return ''
+    return getYouTubeEmbedUrl(video.youtube_video_id)
+  }, [video])
 
   useEffect(() => {
     if (!videoId) {
@@ -259,10 +275,12 @@ const VideoDashboard = () => {
             style={{ aspectRatio: '16/9' }}
           >
             <iframe
-              src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1`}
+              src={youtubeEmbedUrl}
               title={video.title || 'YouTube video player'}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
               className="h-full w-full"
             />
           </div>

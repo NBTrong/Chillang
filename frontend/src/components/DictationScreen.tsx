@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   fetchVideoByYoutubeId,
@@ -10,6 +10,16 @@ import {
   type ReadingSegment,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
+
+// Helper to get YouTube embed URL with proper origin for PWA
+const getYouTubeEmbedUrl = (videoId: string, additionalParams: string = '') => {
+  const origin = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : ''
+  const baseParams = `rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(origin)}`
+  const params = additionalParams ? `${baseParams}&${additionalParams}` : baseParams
+  return `https://www.youtube.com/embed/${videoId}?${params}`
+}
 
 type WordComparison = {
   word: string
@@ -76,6 +86,15 @@ const DictationScreen = () => {
   const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const timeCheckIntervalRef = useRef<number | null>(null)
+  
+  // Button bottom position for mobile (adjusts when keyboard opens)
+  const [buttonBottom, setButtonBottom] = useState<string>('max(1rem, env(safe-area-inset-bottom, 1rem))')
+
+  // Memoize YouTube embed URL to ensure origin is set correctly
+  const youtubeEmbedUrl = useMemo(() => {
+    if (!video) return ''
+    return getYouTubeEmbedUrl(video.youtube_video_id, 'enablejsapi=1&autoplay=0&controls=0&disablekb=1')
+  }, [video])
 
   // Fetch data on mount
   useEffect(() => {
@@ -294,6 +313,42 @@ const DictationScreen = () => {
       textareaRef.current?.focus()
     }, 100)
   }, [currentPromptIndex])
+
+  // Detect keyboard visibility on mobile
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+
+    const handleViewportChange = () => {
+      if (!window.visualViewport) return
+      
+      // Calculate if keyboard is likely open
+      // On mobile, when keyboard opens, visualViewport height becomes smaller than window.innerHeight
+      const viewportHeight = window.visualViewport.height
+      const windowHeight = window.innerHeight
+      const heightDifference = windowHeight - viewportHeight
+      
+      // If viewport is significantly smaller (more than 150px), keyboard is likely open
+      const keyboardOpen = heightDifference > 150
+      
+      // Calculate bottom position for button
+      if (keyboardOpen && window.visualViewport) {
+        const bottomValue = window.innerHeight - window.visualViewport.height + 16
+        setButtonBottom(`${bottomValue}px`)
+      } else {
+        setButtonBottom('max(1rem, env(safe-area-inset-bottom, 1rem))')
+      }
+    }
+
+    window.visualViewport.addEventListener('resize', handleViewportChange)
+    window.visualViewport.addEventListener('scroll', handleViewportChange)
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange)
+        window.visualViewport.removeEventListener('scroll', handleViewportChange)
+      }
+    }
+  }, [])
 
   const currentSegment = segments[currentPromptIndex]
   const totalSegments = segments.length
@@ -663,7 +718,7 @@ const DictationScreen = () => {
           onClick={() => navigate(`/${videoId}/dash`)}
           className="truncate transition-chill hover:text-accent-primary min-w-0"
         >
-          {formatDifficulty(video.difficulty_level)}
+          Dash
         </button>
         <span className="flex-shrink-0">/</span>
         <span className="truncate text-text-primary min-w-0">{t('dictation.title')}</span>
@@ -679,10 +734,12 @@ const DictationScreen = () => {
               <iframe
                 id="youtube-player-dictation"
                 ref={youtubeIframeRef}
-                src={`https://www.youtube.com/embed/${video.youtube_video_id}?rel=0&modestbranding=1&enablejsapi=1&autoplay=0&controls=0&disablekb=1`}
+                src={youtubeEmbedUrl}
                 title={video.title || 'YouTube video player'}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                loading="lazy"
                 className="absolute inset-0 h-full w-full"
               />
             </div>
@@ -882,7 +939,12 @@ const DictationScreen = () => {
       </div>
 
       {/* Sticky Replay Button for Mobile/Tablet */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center p-4 lg:hidden" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}>
+      <div 
+        className="fixed left-0 right-0 z-40 flex justify-center p-4 transition-all duration-300 lg:hidden" 
+        style={{ 
+          bottom: buttonBottom
+        }}
+      >
         <button
           type="button"
           onClick={handleReplay}
