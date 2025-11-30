@@ -44,15 +44,7 @@ const HomeScreen = () => {
       })
 
       if (error) {
-        // Check if error has errorCode for translation
-        const errorCode = (error as any).errorCode
-        if (errorCode === 'NO_CAPTION') {
-          setErrorMessage(t('errors.noCaption'))
-        } else {
-          const message = error.message || t('home.fetchError')
-          const noCaptionError = t('errors.noCaption')
-          setErrorMessage(message.includes(noCaptionError) || message.includes('Video này không có caption') ? noCaptionError : message)
-        }
+        setErrorMessage(t('errors.noCaption'))
         setIsProcessing(false)
         return
       }
@@ -67,7 +59,7 @@ const HomeScreen = () => {
       navigate(`/${data.youtubeVideoId}/dash`)
     } catch (err) {
       console.error('Failed to fetch transcript', err)
-      setErrorMessage(t('home.fetchError'))
+      setErrorMessage(t('errors.noCaption'))
       setIsProcessing(false)
     }
   }
