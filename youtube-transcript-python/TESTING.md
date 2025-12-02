@@ -304,3 +304,6 @@ gcloud logging tail "resource.type=cloud_run_revision AND resource.labels.servic
 ```
 
 
+
+
+

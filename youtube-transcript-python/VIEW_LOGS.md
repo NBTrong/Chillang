@@ -71,3 +71,6 @@ gcloud services enable logging.googleapis.com
 - Kiểm tra service name: `youtube-transcript-python`
 
 
+
+
+
