@@ -2,7 +2,14 @@ import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import type { AuthUser, RecentSessionRecord } from '../services/supabaseApi'
-import { getCurrentUser, signInWithGoogle, signOut, fetchRecentSessions, getUserAvatarUrl } from '../services/supabaseApi'
+import {
+  getCurrentUser,
+  signInWithGoogle,
+  signOut,
+  fetchRecentSessions,
+  getUserAvatarUrl,
+  softDeleteVideoByYoutubeId,
+} from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
@@ -22,7 +29,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const [isLoadingVideos, setIsLoadingVideos] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(0)
+  const [isDeleteMode, setIsDeleteMode] = useState(false)
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null)
   const loadMoreRef = useRef<HTMLLIElement | null>(null)
+  const recentListRef = useRef<HTMLDivElement | null>(null)
+  const longPressTimerRef = useRef<number | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -51,6 +62,23 @@ const Layout = ({ children }: { children: ReactNode }) => {
     // Use getSession() first (faster, from cache) instead of getUser() (makes API call)
     const initAuth = async () => {
       try {
+        // Nếu vừa được redirect từ Supabase (có ?code=... trên URL), exchange code lấy session
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href)
+          if (url.searchParams.get('code')) {
+            try {
+              await supabase.auth.exchangeCodeForSession(url.toString())
+              // Xóa code/state khỏi URL để tránh exchange lại
+              url.searchParams.delete('code')
+              url.searchParams.delete('state')
+              window.history.replaceState({}, document.title, url.toString())
+            } catch (error) {
+              // eslint-disable-next-line no-console
+              console.error('Error exchanging auth code for session', error)
+            }
+          }
+        }
+
         // Try to get session from cache first (no API call)
         const { data: sessionData } = await supabase.auth.getSession()
         if (isMounted && sessionData?.session?.user) {
@@ -161,6 +189,38 @@ const Layout = ({ children }: { children: ReactNode }) => {
     }
   }, [user])
 
+  const handleSoftDeleteVideo = async (session: RecentSessionRecord) => {
+    if (deletingVideoId) return
+    try {
+      setDeletingVideoId(session.youtube_video_id)
+      await softDeleteVideoByYoutubeId(session.youtube_video_id)
+      setRecentVideos((prev) => prev.filter((item) => item.session_id !== session.session_id))
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error soft-deleting video from recent list', error)
+    } finally {
+      setDeletingVideoId(null)
+    }
+  }
+
+  const LONG_PRESS_DURATION = 600
+
+  const startLongPress = () => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current)
+    }
+    longPressTimerRef.current = window.setTimeout(() => {
+      setIsDeleteMode(true)
+    }, LONG_PRESS_DURATION)
+  }
+
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
   // Intersection Observer for infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore || isLoadingVideos) return
@@ -180,6 +240,44 @@ const Layout = ({ children }: { children: ReactNode }) => {
       observer.disconnect()
     }
   }, [hasMore, isLoadingVideos, loadMoreVideos])
+
+  // Lắng nghe sự kiện xóa mềm video từ trang VideoDashboard
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent<{ youtubeVideoId?: string }>
+      const youtubeVideoId = customEvent.detail?.youtubeVideoId
+      if (!youtubeVideoId) return
+
+      setRecentVideos((prev) => prev.filter((item) => item.youtube_video_id !== youtubeVideoId))
+    }
+
+    window.addEventListener('video-soft-deleted', handler as EventListener)
+
+    return () => {
+      window.removeEventListener('video-soft-deleted', handler as EventListener)
+    }
+  }, [])
+
+  // Thoát khỏi chế độ xóa khi click ra ngoài khung recent videos
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!recentListRef.current) return
+      const target = event.target as Node | null
+      if (target && !recentListRef.current.contains(target)) {
+        setIsDeleteMode(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [])
 
   const handleGoogleLogin = async () => {
     if (isLoginSubmitting) return
@@ -273,7 +371,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
 
           {/* Scrollable recent videos section */}
-          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
+          <div ref={recentListRef} className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
             {recentVideos.length === 0 && !isLoadingVideos ? (
               <div className="mt-4 px-3 text-sm text-text-tertiary">
                 {t('layout.noVideos')}
@@ -285,15 +383,40 @@ const Layout = ({ children }: { children: ReactNode }) => {
                     key={session.session_id}
                     className="flex cursor-pointer items-center rounded-2xl px-3 py-2.5 text-base text-text-secondary transition-colors hover:bg-interactive-hover hover:text-text-primary"
                     onClick={() => {
+                      if (isDeleteMode) return
                       navigate(`/${session.youtube_video_id}/dash`)
                       if (!isDesktop) {
                         setIsSidebarOpen(false)
                       }
                     }}
+                    onMouseDown={startLongPress}
+                    onMouseUp={cancelLongPress}
+                    onMouseLeave={cancelLongPress}
+                    onTouchStart={startLongPress}
+                    onTouchEnd={cancelLongPress}
+                    onTouchCancel={cancelLongPress}
                   >
                     <span className="truncate" title={session.title}>
                       {session.title}
                     </span>
+                    {isDeleteMode && (
+                      <button
+                        type="button"
+                        className="ml-2 flex h-6 w-6 items-center justify-center rounded-full text-xs text-text-tertiary hover:bg-interactive-active hover:text-text-primary"
+                        aria-label={t('layout.deleteFromRecent')}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void handleSoftDeleteVideo(session)
+                        }}
+                        disabled={deletingVideoId === session.youtube_video_id}
+                      >
+                        {deletingVideoId === session.youtube_video_id ? (
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-text-tertiary/40 border-t-text-tertiary" />
+                        ) : (
+                          '×'
+                        )}
+                      </button>
+                    )}
                   </li>
                 ))}
                 {/* Sentinel element for infinite scroll */}

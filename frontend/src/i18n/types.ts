@@ -110,6 +110,7 @@ export type TranslationKey =
   | 'layout.account'
   | 'layout.signOut'
   | 'layout.close'
+  | 'layout.deleteFromRecent'
   
   // Theme Toggle
   | 'theme.switchToLight'

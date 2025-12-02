@@ -30,6 +30,9 @@ create table if not exists public.videos (
   ai_metadata jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
+  -- Soft delete flags
+  is_deleted boolean not null default false,
+  deleted_at timestamptz,
   unique (owner_id, youtube_video_id)
 );
 
@@ -164,7 +167,8 @@ select
   v.thumbnail_url,
   v.difficulty_level
 from public.study_sessions s
-join public.videos v on v.id = s.video_id;
+join public.videos v on v.id = s.video_id
+where coalesce(v.is_deleted, false) = false;
 
 -- Row level security
 alter table public.videos enable row level security;

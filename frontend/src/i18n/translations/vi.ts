@@ -110,6 +110,7 @@ export const vi: Record<TranslationKey, string> = {
   'layout.account': 'Tài khoản',
   'layout.signOut': 'Đăng xuất',
   'layout.close': 'Đóng',
+  'layout.deleteFromRecent': 'Xóa khỏi danh sách gần đây',
   
   // Theme Toggle
   'theme.switchToLight': 'Chuyển sang chế độ sáng',

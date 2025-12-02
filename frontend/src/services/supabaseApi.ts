@@ -13,6 +13,8 @@ export type VideoRecord = {
   ai_metadata: Record<string, unknown> | null
   created_at: string
   updated_at: string
+  is_deleted: boolean | null
+  deleted_at: string | null
 }
 
 export type StudySessionRecord = {
@@ -243,10 +245,23 @@ export const fetchVideoByYoutubeId = async (youtubeVideoId: string) => {
     .from('videos')
     .select('*')
     .eq('youtube_video_id', youtubeVideoId)
+    .eq('is_deleted', false)
     .maybeSingle()
 
   if (error) throw error
   return data as VideoRecord | null
+}
+
+export const softDeleteVideoByYoutubeId = async (youtubeVideoId: string) => {
+  const { error } = await supabase
+    .from('videos')
+    .update({
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+    })
+    .eq('youtube_video_id', youtubeVideoId)
+
+  if (error) throw error
 }
 
 export const fetchStudySessionByVideoId = async (videoId: string) => {

@@ -110,6 +110,7 @@ export const en: Record<TranslationKey, string> = {
   'layout.account': 'Account',
   'layout.signOut': 'Sign Out',
   'layout.close': 'Close',
+  'layout.deleteFromRecent': 'Remove from recent videos',
   
   // Theme Toggle
   'theme.switchToLight': 'Switch to light mode',
