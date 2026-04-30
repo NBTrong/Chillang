@@ -13,6 +13,7 @@ import {
   type ReadingSegment,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
+import { SelectableTextHost } from './SelectableTextHost'
 
 // Helper to get YouTube embed URL with proper origin for PWA
 const getYouTubeEmbedUrl = (videoId: string, additionalParams: string = '') => {
@@ -741,34 +742,36 @@ const ListeningScreen = () => {
             ref={transcriptContainerRef}
             className="flex w-full flex-col transition-chill relative rounded-xl lg:w-auto"
           >
-            <div 
-              ref={transcriptScrollRef}
+            <SelectableTextHost
+              sourceVideoId={videoId}
               className="flex-1 space-y-2 overflow-y-auto typo-body min-h-0 max-h-80 transition-all duration-300 rounded-lg lg:max-h-none"
             >
-              {transcriptEntries.map((entry, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSegmentClick(entry.startMs)}
-                  className={`rounded-lg p-2 transition-all duration-200 ease-in-out cursor-pointer md:p-3 ${
-                    !showTranscript ? 'blur-md select-none pointer-events-none' : ''
-                  } ${
-                    entry.highlighted
-                      ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
-                      : 'border border-transparent bg-bg-tertiary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
-                  }`}
-                  style={{
-                    transitionProperty: 'background-color, border-color, color, box-shadow, filter',
-                  }}
-                >
-                  <span className={`typo-caption transition-colors duration-200 ${
-                    entry.highlighted ? 'text-accent-primary/70' : 'text-text-tertiary'
-                  }`}>[{entry.timestamp}]</span>{' '}
-                  <span className={`transition-all duration-200 ${
-                    entry.highlighted ? 'font-medium' : ''
-                  }`}>{entry.text}</span>
-                </div>
-              ))}
-            </div>
+              <div ref={transcriptScrollRef} className="contents">
+                {transcriptEntries.map((entry, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSegmentClick(entry.startMs)}
+                    className={`rounded-lg p-2 transition-all duration-200 ease-in-out cursor-pointer md:p-3 ${
+                      !showTranscript ? 'blur-md select-none pointer-events-none' : ''
+                    } ${
+                      entry.highlighted
+                        ? 'border border-border-accent bg-accent-primary-light/20 text-accent-primary shadow-chill-sm'
+                        : 'border border-transparent bg-bg-tertiary text-text-secondary hover:bg-interactive-hover hover:border-border-accent'
+                    }`}
+                    style={{
+                      transitionProperty: 'background-color, border-color, color, box-shadow, filter',
+                    }}
+                  >
+                    <span className={`typo-caption transition-colors duration-200 ${
+                      entry.highlighted ? 'text-accent-primary/70' : 'text-text-tertiary'
+                    }`}>[{entry.timestamp}]</span>{' '}
+                    <span className={`transition-all duration-200 ${
+                      entry.highlighted ? 'font-medium' : ''
+                    }`}>{entry.text}</span>
+                  </div>
+                ))}
+              </div>
+            </SelectableTextHost>
           </div>
         </div>
 

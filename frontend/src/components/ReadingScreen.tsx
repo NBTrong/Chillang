@@ -4,11 +4,13 @@ import {
   fetchVideoByYoutubeId,
   fetchReadingSegments,
   fetchVocabularyByVideoId,
+  saveWordToVocabulary,
   type VideoRecord,
   type ReadingSegment,
   type VocabularyItem,
 } from '../services/supabaseApi'
 import { useTranslation } from '../context/LanguageContext'
+import { SelectableTextHost } from './SelectableTextHost'
 
 type DictionaryEntry = {
   word: string
@@ -146,9 +148,33 @@ const ReadingScreen = () => {
     console.log('Play audio for:', selectedWord)
   }
 
-  const handleBookmark = () => {
-    // TODO: Implement bookmark functionality
-    console.log('Bookmark word:', selectedWord)
+  const handleBookmark = async () => {
+    if (!selectedWord) return
+    // Look up the original VocabularyItem so we can preserve the canonical
+    // translation/ipa/context_sentence fields when saving.
+    const vocabItem = vocabularyItems.find(
+      (v) => v.word.toLowerCase().replace(/[^a-z]/g, '') === selectedWord,
+    )
+    if (!vocabItem) return
+
+    const lower = vocabItem.word.toLowerCase()
+    const sourceSegment = readingSegments.find((s) =>
+      s.original_text.toLowerCase().includes(lower),
+    )
+
+    try {
+      await saveWordToVocabulary({
+        word: vocabItem.word,
+        translation: vocabItem.translation || vocabItem.definition || '',
+        ipa: vocabItem.ipa ?? null,
+        context_sentence: vocabItem.context_sentence ?? null,
+        source_text:
+          sourceSegment?.original_text ?? vocabItem.context_sentence ?? null,
+        video_id: video?.id ?? null,
+      })
+    } catch (err) {
+      console.error('Failed to save bookmark:', err)
+    }
   }
 
   // Convert vocabulary items to dictionary entries
@@ -274,19 +300,28 @@ const ReadingScreen = () => {
             </p>
           </div>
         ) : (
-          <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '2.0', textIndent: '2em' }}>
-            {readingSegments.map((segment, index) => {
-              const text = segment.original_text
-              // Thêm khoảng trắng giữa các segments nếu cần
-              const needsSpace = index > 0 && !text.startsWith(' ') && !text.startsWith('\n')
-              return (
-                <span key={segment.id || index}>
-                  {needsSpace && ' '}
-                  {renderTextWithHighlights(text)}
-                </span>
-              )
-            })}
-          </p>
+          <SelectableTextHost
+            sourceVideoId={video?.id}
+            suppressed={selectedWord !== null}
+            onSelectionOpen={() => {
+              setSelectedWord(null)
+              setPopupPosition(null)
+            }}
+          >
+            <p className="text-text-primary leading-relaxed" style={{ fontSize: '1.375rem', lineHeight: '2.0', textIndent: '2em' }}>
+              {readingSegments.map((segment, index) => {
+                const text = segment.original_text
+                // Thêm khoảng trắng giữa các segments nếu cần
+                const needsSpace = index > 0 && !text.startsWith(' ') && !text.startsWith('\n')
+                return (
+                  <span key={segment.id || index}>
+                    {needsSpace && ' '}
+                    {renderTextWithHighlights(text)}
+                  </span>
+                )
+              })}
+            </p>
+          </SelectableTextHost>
         )}
       </div>
 
