@@ -121,15 +121,25 @@ create table if not exists public.vocabulary_items (
   definition text,
   translation text,
   context_sentence text,
+  source_text text,
   mastery_level text default 'new' check (mastery_level in ('new','learning','hard','mastered')),
   due_at timestamptz,
+  review_count integer not null default 0,
+  last_reviewed_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+  -- Soft delete flags
+  is_deleted boolean not null default false,
+  deleted_at timestamptz
 );
 
 create trigger set_vocab_updated_at
 before update on public.vocabulary_items
 for each row execute procedure public.set_updated_at();
+
+create index if not exists vocabulary_items_owner_due_idx
+  on public.vocabulary_items (owner_id, due_at)
+  where is_deleted = false;
 
 -- Flashcard review logs
 create table if not exists public.flashcard_reviews (
@@ -250,10 +260,22 @@ create policy "Dictation prompts follow session ownership" on public.dictation_p
     )
   );
 
-create policy "Users manage their vocabulary" on public.vocabulary_items
-  for all
+create policy "Users select their vocabulary" on public.vocabulary_items
+  for select
+  using (owner_id = auth.uid() and is_deleted = false);
+
+create policy "Users insert their vocabulary" on public.vocabulary_items
+  for insert
+  with check (owner_id = auth.uid());
+
+create policy "Users update their vocabulary" on public.vocabulary_items
+  for update
   using (owner_id = auth.uid())
   with check (owner_id = auth.uid());
+
+create policy "Users delete their vocabulary" on public.vocabulary_items
+  for delete
+  using (owner_id = auth.uid());
 
 create policy "Users read their flashcard reviews" on public.flashcard_reviews
   for select using (
