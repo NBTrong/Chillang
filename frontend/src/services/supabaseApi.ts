@@ -83,6 +83,29 @@ export type VocabularyItem = {
   due_at: string | null
   created_at: string
   updated_at: string
+  is_deleted?: boolean | null
+  deleted_at?: string | null
+  review_count?: number | null
+  last_reviewed_at?: string | null
+  source_text?: string | null
+}
+
+export type TranslationResult = {
+  word: string
+  ipa?: string | null
+  translation: string
+  definition?: string | null
+  context_sentence?: string | null
+}
+
+export type SaveVocabularyInput = {
+  word: string
+  ipa?: string | null
+  translation: string
+  definition?: string | null
+  context_sentence?: string | null
+  source_text?: string | null
+  video_id?: string | null
 }
 
 export type AuthUser = Pick<User, 'id' | 'email' | 'user_metadata'>
@@ -345,6 +368,124 @@ export const getUserProfile = async (userId?: string): Promise<UserProfile | nul
 
   if (error) throw error
   return data as UserProfile | null
+}
+
+const getCurrentUserId = async (): Promise<string> => {
+  const { data: session } = await supabase.auth.getSession()
+  if (!session?.session?.user) throw new Error('User not authenticated')
+  return session.session.user.id
+}
+
+export const translateWord = async (input: {
+  word: string
+  context?: string
+  targetLanguage?: string
+}): Promise<TranslationResult> => {
+  const { data, error } = await supabase.functions.invoke<TranslationResult>('translate-word', {
+    body: input,
+  })
+  if (error) throw error
+  return data as TranslationResult
+}
+
+export const saveWordToVocabulary = async (input: SaveVocabularyInput): Promise<VocabularyItem> => {
+  const ownerId = await getCurrentUserId()
+
+  const payload = {
+    ...input,
+    owner_id: ownerId,
+  }
+
+  const { data, error } = await supabase
+    .from('vocabulary_items')
+    .insert(payload)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data as VocabularyItem
+}
+
+export const listVocabulary = async (opts?: { dueOnly?: boolean }): Promise<VocabularyItem[]> => {
+  let query = supabase.from('vocabulary_items').select('*').eq('is_deleted', false)
+
+  if (opts?.dueOnly) {
+    const nowIso = new Date().toISOString()
+    query = query.or(`due_at.lte.${nowIso},due_at.is.null`)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []) as VocabularyItem[]
+}
+
+export const deleteVocabularyItem = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('vocabulary_items')
+    .update({
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+const MASTERY_CHAIN: VocabularyItem['mastery_level'][] = ['new', 'learning', 'hard', 'mastered']
+
+const KNOWN_DUE_OFFSETS_MS: Record<VocabularyItem['mastery_level'], number> = {
+  new: 30 * 60 * 1000, // +0.5h
+  learning: 24 * 60 * 60 * 1000, // +1 day
+  hard: 3 * 24 * 60 * 60 * 1000, // +3 days
+  mastered: 7 * 24 * 60 * 60 * 1000, // +7 days
+}
+
+export const markVocabularyReviewed = async (
+  id: string,
+  outcome: 'known' | 'unknown'
+): Promise<void> => {
+  const { data: row, error: readError } = await supabase
+    .from('vocabulary_items')
+    .select('id, mastery_level, review_count')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (readError) throw readError
+
+  const current = (row as { mastery_level: VocabularyItem['mastery_level']; review_count: number | null } | null) ?? {
+    mastery_level: 'new' as const,
+    review_count: 0,
+  }
+
+  const now = new Date()
+  const currentLevel = current.mastery_level
+  const reviewCount = (current.review_count ?? 0) + 1
+
+  let nextLevel: VocabularyItem['mastery_level']
+  let dueAt: Date
+
+  if (outcome === 'known') {
+    const idx = MASTERY_CHAIN.indexOf(currentLevel)
+    const nextIdx = Math.min(idx + 1, MASTERY_CHAIN.length - 1)
+    nextLevel = MASTERY_CHAIN[nextIdx]
+    dueAt = new Date(now.getTime() + KNOWN_DUE_OFFSETS_MS[currentLevel])
+  } else {
+    nextLevel = currentLevel === 'new' ? 'new' : 'learning'
+    dueAt = new Date(now.getTime() + 10 * 60 * 1000)
+  }
+
+  const { error: updateError } = await supabase
+    .from('vocabulary_items')
+    .update({
+      mastery_level: nextLevel,
+      review_count: reviewCount,
+      last_reviewed_at: now.toISOString(),
+      due_at: dueAt.toISOString(),
+    })
+    .eq('id', id)
+
+  if (updateError) throw updateError
 }
 
 export const updateUserLanguage = async (language: 'vi' | 'en', userId?: string): Promise<UserProfile> => {
