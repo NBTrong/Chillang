@@ -6,8 +6,8 @@ This folder contains everything you need to turn Supabase into the managed backe
 
 ### 1. Project metadata
 
-- **Project ID:** `prxsyvwhysitbpdfbigh`
-- **API URL:** `https://prxsyvwhysitbpdfbigh.supabase.co`
+- **Project ID:** `vnizbfgyrknjhovkpipw`
+- **API URL:** `https://vnizbfgyrknjhovkpipw.supabase.co`
 - **Service role key:** `fake_service_role_key` (never ship this to the frontend; store it in secret managers or server-only `.env` files).
 - **Anon/public key:** generate from the Supabase dashboard (`Settings → API`). Paste it into your local `.env`/CI later.
 
@@ -20,7 +20,7 @@ This folder contains everything you need to turn Supabase into the managed backe
 3. Alternatively, install the CLI and run:
    ```bash
    cd /Users/nbtrong/Documents/self-learn
-   supabase db push --project-ref prxsyvwhysitbpdfbigh --db-url "postgresql://postgres:<SUPABASE_DB_PASSWORD>@db.prxsyvwhysitbpdfbigh.supabase.co:6543/postgres"
+   supabase db push --project-ref vnizbfgyrknjhovkpipw --db-url "postgresql://postgres:<SUPABASE_DB_PASSWORD>@db.vnizbfgyrknjhovkpipw.supabase.co:6543/postgres"
    ```
    Replace `<SUPABASE_DB_PASSWORD>` with the password shown in Project Settings → Database.
 
@@ -37,7 +37,7 @@ Supabase automatically exposes each table via PostgREST:
 
 | Resource | Endpoint | Example |
 | --- | --- | --- |
-| Videos | `GET/POST /rest/v1/videos` | `GET https://prxsyvwhysitbpdfbigh.supabase.co/rest/v1/videos?select=*` |
+| Videos | `GET/POST /rest/v1/videos` | `GET https://vnizbfgyrknjhovkpipw.supabase.co/rest/v1/videos?select=*` |
 | Study sessions | `/rest/v1/study_sessions` | `POST ... { "video_id": "...", "status": "ready" }` |
 | Reading segments | `/rest/v1/reading_segments` | `GET ...?video_id=eq.<video_uuid>&order=segment_index` |
 | Listening quizzes | `/rest/v1/listening_quizzes` | `GET ...?session_id=eq.<session_uuid>` |
@@ -65,7 +65,7 @@ Copy `frontend/env.example` to `.env` or `.env.local`:
 cp frontend/env.example frontend/.env.local
 ```
 Fill in the missing values:
-- `VITE_SUPABASE_URL=https://prxsyvwhysitbpdfbigh.supabase.co`
+- `VITE_SUPABASE_URL=https://vnizbfgyrknjhovkpipw.supabase.co`
 - `VITE_SUPABASE_ANON_KEY=<anon_public_key_from_dashboard>`
 - `SUPABASE_SERVICE_ROLE_KEY=<service_role_key_from_dashboard>` (only for server-side tooling, *not* for Vite).
 - `SUPABASE_DB_PASSWORD=<database_password_if_running supabase db push>`
@@ -94,12 +94,12 @@ Fill in the missing values:
   ```bash
   cd /Users/nbtrong/Documents/self-learn
   supabase functions deploy fetch-youtube-caption \
-    --project-ref prxsyvwhysitbpdfbigh \
+    --project-ref vnizbfgyrknjhovkpipw \
     --env-file supabase/.env
   ```
   Ensure the secret exists before deploying:
   ```bash
-  supabase secrets set --project-ref prxsyvwhysitbpdfbigh RAPIDAPI_KEY=your_rapidapi_key_here
+  supabase secrets set --project-ref vnizbfgyrknjhovkpipw RAPIDAPI_KEY=your_rapidapi_key_here
   ```
 
 ---
@@ -124,7 +124,7 @@ If you want to orchestrate Supabase directly from Cursor/Claude:
 1. Generate a **Personal Access Token** in Supabase Dashboard → Account Settings.
 2. Configure your MCP-enabled client with:
    ```
-   supabase --access-token <PAT> --project-id prxsyvwhysitbpdfbigh
+   supabase --access-token <PAT> --project-id vnizbfgyrknjhovkpipw
    ```
 3. From there you can run `list_projects`, `execute_sql`, create migrations, deploy Edge Functions, etc., without leaving the IDE.
 

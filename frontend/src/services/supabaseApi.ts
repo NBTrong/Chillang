@@ -244,7 +244,7 @@ export const fetchVideoByYoutubeId = async (youtubeVideoId: string) => {
   const { data, error } = await supabase
     .from('videos')
     .select('*')
-    .eq('youtube_video_id', youtubeVideoId)
+    .ilike('youtube_video_id', youtubeVideoId)
     .eq('is_deleted', false)
     .maybeSingle()
 

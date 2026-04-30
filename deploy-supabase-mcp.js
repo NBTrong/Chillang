@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROJECT_ID = 'prxsyvwhysitbpdfbigh';
+const PROJECT_ID = 'vnizbfgyrknjhovkpipw';
 const FUNCTIONS_DIR = path.join(__dirname, 'supabase/functions');
 
 // Colors for output

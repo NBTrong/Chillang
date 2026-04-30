@@ -6,7 +6,7 @@
 
 set -e
 
-PROJECT_REF="prxsyvwhysitbpdfbigh"
+PROJECT_REF="vnizbfgyrknjhovkpipw"
 FUNCTIONS_DIR="supabase/functions"
 
 # Colors for output

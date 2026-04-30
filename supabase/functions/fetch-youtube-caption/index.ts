@@ -247,7 +247,7 @@ const fetchTranscriptFromProvider1 = async (
   videoId: string,
   apiKey: string,
 ): Promise<NormalizedTranscript> => {
-  const url = `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${encodeURIComponent(videoId)}`
+  const url = `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${encodeURIComponent(videoId)}&lang=en`
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -275,7 +275,7 @@ const fetchTranscriptFromProvider1 = async (
 
   return {
     transcript: firstItem.transcriptionAsText,
-    language: firstItem.availableLangs?.[0] ?? null,
+    language: 'en',
     segments: (firstItem.transcription ?? []).map((seg) => ({
       subtitle: decodeHtmlEntities(seg.subtitle),
       start: seg.start,
@@ -580,9 +580,9 @@ const fetchTranscriptWithFallback = async (
     name: string
     fetch: (videoId: string, apiKey: string) => Promise<NormalizedTranscript>
   }> = [
-    // { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
-    { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 },
-    // { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
+    { name: 'youtube-transcriptor', fetch: fetchTranscriptFromProvider1 },
+    // { name: 'youtube-v2', fetch: fetchTranscriptFromProvider2 }, // disabled: current RapidAPI key lacks subscription (401)
+    { name: 'yt-api', fetch: fetchTranscriptFromProvider3 },
     // { name: 'python-yt-dlp', fetch: fetchTranscriptFromProvider4 },
     // { name: 'python-yt-dlp-2', fetch: fetchTranscriptFromProvider5 },
   ]
@@ -1201,6 +1201,8 @@ serve(async (request) => {
     const videoPayload = {
       owner_id: ownerId,
       youtube_video_id: videoId,
+      is_deleted: false,
+      deleted_at: null as string | null,
       title: videoTitle,
       channel_name: null as string | null,
       thumbnail_url: (() => {

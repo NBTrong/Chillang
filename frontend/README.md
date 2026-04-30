@@ -15,7 +15,7 @@ npm run dev
 
 | Key | Description |
 | --- | --- |
-| `VITE_SUPABASE_URL` | `https://prxsyvwhysitbpdfbigh.supabase.co` |
+| `VITE_SUPABASE_URL` | `https://vnizbfgyrknjhovkpipw.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | Public anon key from Supabase dashboard |
 | `SUPABASE_SERVICE_ROLE_KEY` | Only used for server-side scripts / Edge Functions |
 | `SUPABASE_DB_PASSWORD` | Required if you push migrations via CLI |
