@@ -142,5 +142,16 @@ export const vi: Record<TranslationKey, string> = {
   
   // PWA
   'pwa.install': 'Cài đặt ứng dụng',
+
+  // Translation Popup
+  'translation.loading': 'Đang dịch...',
+  'translation.error': 'Không thể dịch từ này.',
+  'translation.retry': 'Thử lại',
+  'translation.add': 'Lưu vào bộ sưu tập',
+  'translation.added': 'Đã thêm ✓',
+  'translation.ipa': 'Phát âm',
+  'translation.translation': 'Bản dịch',
+  'translation.close': 'Đóng',
+  'translation.dialogLabel': 'Bản dịch từ vựng',
 }
 

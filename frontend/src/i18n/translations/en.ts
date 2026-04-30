@@ -142,5 +142,16 @@ export const en: Record<TranslationKey, string> = {
   
   // PWA
   'pwa.install': 'Install App',
+
+  // Translation Popup
+  'translation.loading': 'Translating...',
+  'translation.error': 'Could not translate this word.',
+  'translation.retry': 'Retry',
+  'translation.add': 'Add to Collection',
+  'translation.added': 'Added ✓',
+  'translation.ipa': 'Pronunciation',
+  'translation.translation': 'Translation',
+  'translation.close': 'Close',
+  'translation.dialogLabel': 'Word translation',
 }
 

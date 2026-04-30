@@ -143,3 +143,14 @@ export type TranslationKey =
   // PWA
   | 'pwa.install'
 
+  // Translation Popup
+  | 'translation.loading'
+  | 'translation.error'
+  | 'translation.retry'
+  | 'translation.add'
+  | 'translation.added'
+  | 'translation.ipa'
+  | 'translation.translation'
+  | 'translation.close'
+  | 'translation.dialogLabel'
+
