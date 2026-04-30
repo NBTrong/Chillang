@@ -358,11 +358,19 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <span className="text-xl leading-none">＋</span>
                 {t('layout.newSession')}
               </button>
-              {/* Temporarily hidden until vocabulary feature is implemented */}
-              {/* <button className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover">
+              <button
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-interactive-hover"
+                onClick={() => {
+                  navigate('/vocabulary')
+                  if (!isDesktop) {
+                    setIsSidebarOpen(false)
+                  }
+                }}
+                type="button"
+              >
                 <span className="text-xl leading-none">💎</span>
-                {t('layout.vocabularyManager')}
-              </button> */}
+                {t('nav.vocabulary')}
+              </button>
             </div>
 
             <div className="mt-6 px-3 text-[10px] font-semibold tracking-[0.35em] text-text-tertiary">

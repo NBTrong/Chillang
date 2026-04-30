@@ -6,6 +6,7 @@ import VideoDashboard from './components/VideoDashboard'
 import ReadingScreen from './components/ReadingScreen'
 import DictationScreen from './components/DictationScreen'
 import ListeningScreen from './components/ListeningScreen'
+import VocabularyScreen from './components/VocabularyScreen'
 
 // const LAST_VISITED_ROUTE_KEY = 'lastVisitedRoute'
 
@@ -35,6 +36,7 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
+        <Route path="/vocabulary" element={<VocabularyScreen />} />
         <Route path="/:videoId/dash" element={<VideoDashboard />} />
         <Route path="/:videoId/reading" element={<ReadingScreen />} />
         <Route path="/:videoId/dictation" element={<DictationScreen />} />
